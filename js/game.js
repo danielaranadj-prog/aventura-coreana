@@ -744,10 +744,6 @@ function drawMenu(){
   grad.addColorStop(0,'#0c4a6e');grad.addColorStop(0.5,'#0369a1');grad.addColorStop(1,'#7dd3fc');
   ctx.fillStyle=grad;ctx.fillRect(0,0,canvas.width,canvas.height);
   drawClouds();drawMountains();
-  if (spriteLoader.loaded === spriteLoader.total) {
-    animator.setStaticFrame('ready', 0);
-    animator.draw(ctx, 336, 280, 1, 28, 48);
-  }
 }
 
 // ============================================================
