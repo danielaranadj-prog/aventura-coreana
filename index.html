@@ -293,11 +293,7 @@
     box-shadow: 0 0 15px rgba(0,255,255,0.6);
   }
   .loading-status {
-    font-size: 12px;
-    color: #ff69b4;
-    font-family: monospace;
-    letter-spacing: 2px;
-    text-shadow: 0 0 8px rgba(255,105,180,0.4);
+    display: none; /* Ocultamos el contador numérico */
   }
   .loading-blink {
     font-size: 11px;
@@ -350,7 +346,6 @@
       <div class="loading-bar">
         <div class="loading-fill" id="loading-fill"></div>
       </div>
-      <div class="loading-status" id="loading-status">0 / 5</div>
       <div class="loading-blink">INSERT COIN</div>
     </div>
   </div>

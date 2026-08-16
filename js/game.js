@@ -296,9 +296,7 @@ class SpriteLoader {
   }
 
   updateLoadingUI() {
-    const status = document.getElementById('loading-status');
     const fill = document.getElementById('loading-fill');
-    if (status) status.textContent = this.loaded + ' / ' + this.total;
     if (fill) {
       const pct = (this.loaded / this.total) * 100;
       fill.style.width = pct + '%';
@@ -705,14 +703,36 @@ function updatePlayer(){
 
 function updateEnemies(){
   enemies.forEach(e=>{
-    if(e.dead)return;
-    e.x+=e.vx;
-    const tx=Math.floor((e.x+(e.vx>0?e.w:0))/TILE);
-    const ty2=Math.floor((e.y+e.h+4)/TILE);
-    if(!isSolid(levelMap[ty2][tx])||isSolid(levelMap[Math.floor((e.y+e.h)/TILE)][tx]))e.vx*=-1;
-    if(rectIntersect(player,e)&&player.invincible<=0){
-      if(player.vy>0&&player.y+player.h<e.y+e.h/2){e.dead=true;player.vy=JUMP_FORCE*0.7;score+=200;spawnParticles(e.x+e.w/2,e.y+e.h/2,'#ff0040',12);updateUI();}
-      else playerDie();
+    if(e.dead) return;
+
+    e.x += e.vx;
+
+    // Verificar límites del mundo
+    if (e.x <= 0 || e.x + e.w >= LEVEL_WIDTH * TILE) {
+      e.vx *= -1;
+      e.x = Math.max(0, Math.min(e.x, LEVEL_WIDTH * TILE - e.w));
+      return;
+    }
+
+    const frontX = e.x + (e.vx > 0 ? e.w : 0);
+    const groundAhead = getTile(frontX, e.y + e.h + 4);
+    const wallAhead   = getTile(frontX, e.y + e.h / 2);
+
+    // Si no hay suelo adelante o hay una pared al frente, invertir dirección
+    if (!isSolid(groundAhead) || isSolid(wallAhead)) {
+      e.vx *= -1;
+    }
+
+    if(rectIntersect(player,e) && player.invincible<=0){
+      if(player.vy>0 && player.y+player.h < e.y+e.h/2){
+        e.dead=true;
+        player.vy=JUMP_FORCE*0.7;
+        score+=200;
+        spawnParticles(e.x+e.w/2,e.y+e.h/2,'#ff0040',12);
+        updateUI();
+      } else {
+        playerDie();
+      }
     }
   });
 }
