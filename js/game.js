@@ -120,7 +120,7 @@ const AUDIO_CONFIG = {
 
   gameAdventure:{ src: 'assets/game-adventure.mp3', loop: true,  volume: 0.5 },
 
-  death:        { src: 'assets/death.mp3',         loop: false, volume: 0.8 },
+  death:        { src: 'assets/death.mp3',         loop: false, volume: 0.6 },
 
   fail:         { src: 'assets/fail.mp3',          loop: false, volume: 0.8 },
 
