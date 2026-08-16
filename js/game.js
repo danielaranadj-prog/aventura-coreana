@@ -546,12 +546,12 @@ function generateLevel() {
 
   // Plataformas azules (tile=2) subidas 3-4 tiles sobre suelo (y entre 14 y 11)
   // NUNCA tocando el suelo (y=18-19)
-  plat(3, 14, 4);   plat(10, 13, 3);  plat(16, 11, 2, 3); plat(22, 13, 3);
+  plat(3, 14, 4);   plat(12, 14, 3);  plat(16, 18, 2, 3); plat(22, 13, 3);
   plat(28, 11, 4);  plat(35, 11, 2, 3); plat(40, 11, 3);  plat(46, 13, 2);
   plat(50, 10, 4);  plat(57, 11, 2, 3); plat(62, 10, 3);  plat(68, 12, 2);
   plat(72, 9, 4);   plat(78, 10, 2, 3); plat(83, 10, 3);  plat(88, 12, 2);
   plat(92, 8, 4);   plat(98, 10, 2, 3); plat(103, 9, 3);  plat(108, 11, 2);
-  plat(112, 8, 4);  plat(5, 11, 3);    plat(12, 10, 2);  plat(18, 9, 3);
+  plat(112, 8, 4);  plat(5, 14, 3);    plat(12, 10, 2);  plat(18, 9, 3);
   plat(25, 10, 2);  plat(32, 8, 4);   plat(38, 8, 2, 3); plat(44, 7, 3);
   plat(52, 9, 2);   plat(58, 6, 4);   plat(64, 7, 2, 3); plat(70, 6, 3);
 
