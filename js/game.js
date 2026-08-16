@@ -426,6 +426,74 @@ let animator = null;
 const LEVEL_WIDTH = 120;
 const LEVEL_HEIGHT = 20;
 
+// ============================================================
+// CARGA DE NIVEL DESDE JSON (Sprite Fusion / Tiled)
+// ============================================================
+// Mapeo de IDs del tileset → IDs del juego
+// Ajusta estos números según el orden de tiles en tu tileset
+const TILE_MAP = {
+  0: 1,   // suelo
+  1: 2,   // plataforma
+  2: 3,   // bloque moneda
+  3: 4,   // tubo
+  4: 5,   // bandera
+};
+
+let levelFromJSON = false;
+
+async function loadLevelFromJSON(url) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('No se encontró el archivo');
+    const data = await res.json();
+
+    const map = [];
+    const h = data.height || LEVEL_HEIGHT;
+    const w = data.width || LEVEL_WIDTH;
+
+    for (let y = 0; y < h; y++) {
+      map[y] = [];
+      for (let x = 0; x < w; x++) map[y][x] = 0;
+    }
+
+    // Sprite Fusion exporta capas con array de tiles
+    if (data.layers) {
+      data.layers.forEach(layer => {
+        if (layer.tiles) {
+          layer.tiles.forEach(tile => {
+            const gameId = TILE_MAP[tile.id];
+            if (gameId !== undefined && tile.y < h && tile.x < w) {
+              map[tile.y][tile.x] = gameId;
+            }
+          });
+        }
+        // Tiled exporta capas con array de datos
+        if (layer.data && layer.width) {
+          for (let i = 0; i < layer.data.length; i++) {
+            const tileId = layer.data[i];
+            if (tileId > 0) {
+              const tx = i % layer.width;
+              const ty = Math.floor(i / layer.width);
+              const gameId = TILE_MAP[tileId - 1]; // Tiled usa 1-based
+              if (gameId !== undefined && ty < h && tx < w) {
+                map[ty][tx] = gameId;
+              }
+            }
+          }
+        }
+      });
+    }
+
+    levelFromJSON = true;
+    return map;
+  } catch (e) {
+    console.warn('No se pudo cargar el nivel JSON:', e.message);
+    console.warn('Usando nivel generado por código.');
+    levelFromJSON = false;
+    return generateLevel();
+  }
+}
+
 function generateLevel() {
   const map = [];
   for (let y = 0; y < LEVEL_HEIGHT; y++) {
@@ -653,17 +721,20 @@ function updateMenuPreview() {
 
 function drawWinCharacter() {
   const preview = document.getElementById('win-character-preview');
-  const spriteData = spriteLoader.get('celebrate');
+  const spriteData = spriteLoader.get('run');
   if (!preview || !spriteData) return;
   const previewCtx = preview.getContext('2d');
 
   const col = winPreviewFrame % spriteData.cols;
   const row = Math.floor(winPreviewFrame / spriteData.cols);
 
-  // Mantener aspect ratio exacto del sprite para evitar deformación
-  const aspect = spriteData.frameWidth / spriteData.frameHeight;
-  const maxH = preview.height - 10;
-  const maxW = preview.width - 10;
+  // Calcular aspect ratio REAL desde la imagen cargada (más preciso que frameWidth/Height)
+  const realFrameW = spriteData.image.width / spriteData.cols;
+  const realFrameH = spriteData.image.height / spriteData.rows;
+  const aspect = realFrameW / realFrameH;
+
+  const maxH = preview.height - 4;
+  const maxW = preview.width - 4;
   let dh = maxH;
   let dw = dh * aspect;
   if (dw > maxW) {
@@ -675,8 +746,8 @@ function drawWinCharacter() {
   previewCtx.imageSmoothingEnabled = false;
   previewCtx.drawImage(
     spriteData.image,
-    col * spriteData.frameWidth, row * spriteData.frameHeight,
-    spriteData.frameWidth, spriteData.frameHeight,
+    Math.round(col * realFrameW), Math.round(row * realFrameH),
+    Math.round(realFrameW), Math.round(realFrameH),
     Math.round((preview.width - dw) / 2), Math.round((preview.height - dh) / 2),
     Math.round(dw), Math.round(dh)
   );
@@ -687,8 +758,11 @@ function updateWinPreview() {
   winPreviewTimer++;
   if (winPreviewTimer >= 5) {
     winPreviewTimer = 0;
-    winPreviewFrame = (winPreviewFrame + 1) % spriteLoader.get('celebrate').frames;
-    drawWinCharacter();
+    const runData = spriteLoader.get('run');
+    if (runData) {
+      winPreviewFrame = (winPreviewFrame + 1) % runData.frames;
+      drawWinCharacter();
+    }
   }
   requestAnimationFrame(updateWinPreview);
 }
