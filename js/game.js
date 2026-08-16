@@ -684,7 +684,7 @@ function updatePlayer() {
   if (player.celebrating) {
     player.celebrateTimer--;
     if (player.celebrateTimer <= 0) player.celebrating = false;
-    animator.setAnimation('celebrate');
+    animator.setAnimation('run');
     animator.update();
     return;
   }
@@ -744,9 +744,9 @@ function updatePlayer() {
   const isMoving = Math.abs(player.vx) > 0.15;
 
   if (player.onGround && !hasInput && !isMoving) {
-    animator.setAnimation('ready');
+    animator.setStaticFrame('run', 6);
   } else {
-    animator.setAnimation('run', 6); // siempre empieza desde frame 6 al correr
+    animator.setAnimation('run', 0);
   }
   animator.update();
 }
