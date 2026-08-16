@@ -55,6 +55,30 @@ const SPRITE_CONFIG = {
       scale: 0.085, offsetX: -24, offsetY: -58,
 
     },
+    'arana-run': {
+
+      src: 'assets/arana-run.png',
+
+      frames: 16, speed: 3, cols: 4, rows: 4,
+
+      frameWidth: 101, frameHeight: 131,
+
+      scale: 0.42, offsetX: -21, offsetY: -52,
+
+    },
+
+    'arana-celebrate': {
+
+      src: 'assets/arana-celebrate.png',
+
+      frames: 16, speed: 3, cols: 4, rows: 4,
+
+      frameWidth: 134, frameHeight: 229,
+
+      scale: 0.25, offsetX: -17, offsetY: -56,
+
+    },
+
 
     prispas: {
 
@@ -698,14 +722,34 @@ class Animator {
     this.staticFrame = 0;
 
   }
+  resolveAnimName(name) {
+
+    if (selectedCharacter === 'tomy') return name;
+
+    const map = {
+
+      'run': 'arana-run',
+
+      'celebrate': 'arana-celebrate',
+
+      'ready': 'arana-ready'
+
+    };
+
+    return map[name] || name;
+
+  }
+
 
 
 
   setAnimation(name, startFrame = 0) {
 
-    if (this.currentAnim !== name || this.isStatic) {
+    const resolved = this.resolveAnimName(name);
 
-      this.currentAnim = name;
+    if (this.currentAnim !== resolved || this.isStatic) {
+
+      this.currentAnim = resolved;
 
       this.currentFrame = startFrame;
 
@@ -721,9 +765,11 @@ class Animator {
 
   setStaticFrame(name, frameIndex) {
 
-    if (this.currentAnim !== name || !this.isStatic || this.staticFrame !== frameIndex) {
+    const resolved = this.resolveAnimName(name);
 
-      this.currentAnim = name;
+    if (this.currentAnim !== resolved || !this.isStatic || this.staticFrame !== frameIndex) {
+
+      this.currentAnim = resolved;
 
       this.staticFrame = frameIndex;
 
@@ -1555,15 +1601,29 @@ function isKeyDown(code) { return keys[code] || touchKeys[code]; }
 
 function selectCharacter(name) {
 
-  if (name !== 'tomy') return;
-
   selectedCharacter = name;
 
-  const tomyCard = document.getElementById('character-tomy');
+  // Quitar selección de todos
 
-  tomyCard.classList.add('selected');
+  document.querySelectorAll('.character-card').forEach(card => {
 
-  tomyCard.setAttribute('aria-pressed', 'true');
+    card.classList.remove('selected');
+
+    card.setAttribute('aria-pressed', 'false');
+
+  });
+
+  // Seleccionar el elegido
+
+  const card = document.getElementById('character-' + name);
+
+  if (card) {
+
+    card.classList.add('selected');
+
+    card.setAttribute('aria-pressed', 'true');
+
+  }
 
 }
 
@@ -1745,7 +1805,8 @@ function drawFireworks(ctx) {
 
 function drawWinCharacter() {
   const preview = document.getElementById('win-character-preview');
-  const spriteData = spriteLoader.get('celebrate');
+  const animName = selectedCharacter === 'tomy' ? 'celebrate' : 'arana-celebrate';
+  const spriteData = spriteLoader.get(animName);
   if (!preview || !spriteData) return;
 
   const previewCtx = preview.getContext('2d');
@@ -1800,7 +1861,9 @@ function updateWinPreview() {
 
     winPreviewTimer = 0;
 
-    const celData = spriteLoader.get('celebrate');
+    const animName = selectedCharacter === 'tomy' ? 'celebrate' : 'arana-celebrate';
+
+    const celData = spriteLoader.get(animName);
 
     if (celData) {
 
