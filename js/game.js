@@ -1498,6 +1498,7 @@ let coins = [];
 // ============================================================
 
 let particles = [];
+let fireworks = [];
 
 function spawnParticles(x, y, color, count = 8) {
 
@@ -1815,10 +1816,12 @@ function drawWinCharacter() {
   const col = winPreviewFrame % spriteData.cols;
   const row = Math.floor(winPreviewFrame / spriteData.cols);
 
-  const playerImage = spriteData.image;
+  const fw = spriteData.frameWidth;
+  const fh = spriteData.frameHeight;
+  const aspectRatio = fw / fh;
 
   ctxWin.clearRect(0, 0, canvasWin.width, canvasWin.height);
-  const aspectRatio = playerImage.width / playerImage.height;
+
   let renderWidth = canvasWin.width * 0.8;
   let renderHeight = renderWidth / aspectRatio;
   if (renderHeight > canvasWin.height * 0.9) {
@@ -1830,9 +1833,9 @@ function drawWinCharacter() {
 
   ctxWin.imageSmoothingEnabled = false;
   ctxWin.drawImage(
-    playerImage,
-    col * spriteData.frameWidth, row * spriteData.frameHeight,
-    spriteData.frameWidth, spriteData.frameHeight,
+    spriteData.image,
+    col * fw, row * fh,
+    fw, fh,
     renderX, renderY, renderWidth, renderHeight
   );
   ctxWin.imageSmoothingEnabled = true;
@@ -2062,6 +2065,7 @@ function updatePlayer() {
 
     animator.update();
 
+}
 }
 
 
