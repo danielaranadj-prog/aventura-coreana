@@ -297,7 +297,12 @@ class SpriteLoader {
 
   updateLoadingUI() {
     const status = document.getElementById('loading-status');
-    if (status) status.textContent = this.loaded + ' / ' + this.total + ' archivos cargados';
+    const fill = document.getElementById('loading-fill');
+    if (status) status.textContent = this.loaded + ' / ' + this.total;
+    if (fill) {
+      const pct = (this.loaded / this.total) * 100;
+      fill.style.width = pct + '%';
+    }
   }
 
   get(name) { return this.images[name]; }
