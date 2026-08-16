@@ -1,5 +1,5 @@
 // ============================================================
-// CONFIGURACIÓN DE SPRITES TOMY — VERSIÓN VERTICAL MÓVIL
+// CONFIGURACIÓN DE SPRITES TOMY + ARANA
 // ============================================================
 const SPRITE_CONFIG = {
   files: {
@@ -39,6 +39,18 @@ const SPRITE_CONFIG = {
       offsetX: -22,
       offsetY: -58,
     },
+    'arana-ready': {
+      src: 'assets/arana-ready.png',
+      frames: 16,
+      speed: 3,
+      cols: 4,
+      rows: 4,
+      frameWidth: 447,
+      frameHeight: 664,
+      scale: 0.085,
+      offsetX: -24,
+      offsetY: -58,
+    },
     prispas: {
       src: 'assets/prispas.webp',
       frames: 1,
@@ -52,7 +64,152 @@ const SPRITE_CONFIG = {
 };
 
 // ============================================================
-// CONFIGURACIÓN DEL JUEGO — VERTICAL
+// CONFIGURACIÓN DE AUDIO
+// ============================================================
+const AUDIO_CONFIG = {
+  selectPlayer: { src: 'assets/select-player.mp3', loop: true, volume: 0.6 },
+  gameStart:    { src: 'assets/game-start.mp3',    loop: false, volume: 0.7 },
+  gameAdventure:{ src: 'assets/game-adventure.mp3', loop: true, volume: 0.5 },
+  death:        { src: 'assets/death.mp3',         loop: false, volume: 0.8 },
+  fail:         { src: 'assets/fail.mp3',          loop: false, volume: 0.8 },
+};
+
+// ============================================================
+// SISTEMA DE AUDIO
+// ============================================================
+class AudioManager {
+  constructor(config) {
+    this.config = config;
+    this.sounds = {};
+    this.audioCtx = null;
+    this.masterGain = null;
+    this.initialized = false;
+    this.currentMusic = null;
+  }
+
+  init() {
+    if (this.initialized) return;
+    try {
+      this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      this.masterGain = this.audioCtx.createGain();
+      this.masterGain.gain.value = 1.0;
+      this.masterGain.connect(this.audioCtx.destination);
+      this.initialized = true;
+    } catch (e) {
+      console.warn('Web Audio API no disponible');
+    }
+  }
+
+  loadAll() {
+    const promises = [];
+    for (const [name, info] of Object.entries(this.config)) {
+      const promise = new Promise((resolve) => {
+        const audio = new Audio();
+        audio.src = info.src;
+        audio.loop = info.loop;
+        audio.volume = info.volume;
+        audio.preload = 'auto';
+        audio.addEventListener('canplaythrough', () => resolve(), { once: true });
+        audio.addEventListener('error', () => {
+          console.warn('No se pudo cargar audio:', info.src);
+          resolve();
+        }, { once: true });
+        this.sounds[name] = audio;
+      });
+      promises.push(promise);
+    }
+    return Promise.all(promises);
+  }
+
+  resumeContext() {
+    if (this.audioCtx && this.audioCtx.state === 'suspended') {
+      this.audioCtx.resume();
+    }
+  }
+
+  play(name) {
+    this.resumeContext();
+    const sound = this.sounds[name];
+    if (!sound) return;
+    sound.currentTime = 0;
+    const playPromise = sound.play();
+    if (playPromise) playPromise.catch(() => {});
+  }
+
+  stop(name) {
+    const sound = this.sounds[name];
+    if (!sound) return;
+    sound.pause();
+    sound.currentTime = 0;
+  }
+
+  pause(name) {
+    const sound = this.sounds[name];
+    if (!sound) return;
+    sound.pause();
+  }
+
+  playMusic(name) {
+    if (this.currentMusic && this.currentMusic !== name) {
+      this.stop(this.currentMusic);
+    }
+    this.currentMusic = name;
+    this.play(name);
+  }
+
+  stopAll() {
+    for (const name in this.sounds) {
+      this.stop(name);
+    }
+    this.currentMusic = null;
+  }
+
+  playVictoryFanfare() {
+    if (!this.audioCtx) this.init();
+    if (!this.audioCtx) return;
+    this.resumeContext();
+
+    const now = this.audioCtx.currentTime;
+    const notes = [
+      { f: 523.25, t: 0.0, d: 0.25 },
+      { f: 659.25, t: 0.15, d: 0.25 },
+      { f: 783.99, t: 0.30, d: 0.25 },
+      { f: 1046.50, t: 0.45, d: 0.6 },
+    ];
+
+    notes.forEach(n => {
+      const osc = this.audioCtx.createOscillator();
+      const gain = this.audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(n.f, now + n.t);
+      gain.gain.setValueAtTime(0.15, now + n.t);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + n.t + n.d);
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start(now + n.t);
+      osc.stop(now + n.t + n.d);
+    });
+
+    const chord = [261.63, 329.63, 392.00];
+    chord.forEach((freq, i) => {
+      const osc = this.audioCtx.createOscillator();
+      const gain = this.audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start(now);
+      osc.stop(now + 1.2);
+    });
+  }
+}
+
+const audioManager = new AudioManager(AUDIO_CONFIG);
+
+// ============================================================
+// CONFIGURACIÓN DEL JUEGO — VERTICAL RESPONSIVO
 // ============================================================
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -74,6 +231,7 @@ let timerInterval = null;
 let selectedCharacter = 'tomy';
 let menuPreviewFrame = 0;
 let menuPreviewTimer = 0;
+let aranaPreviewFrame = 0;
 let winPreviewFrame = 0;
 let winPreviewTimer = 0;
 
@@ -119,9 +277,14 @@ class SpriteLoader {
 
     Promise.all(promises)
       .then(() => {
+        return audioManager.loadAll();
+      })
+      .then(() => {
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('start-screen').classList.remove('hidden');
         gameState = 'menu';
+        audioManager.init();
+        audioManager.playMusic('selectPlayer');
         if (this.onComplete) this.onComplete();
       })
       .catch(err => {
@@ -229,10 +392,10 @@ class Animator {
 let animator = null;
 
 // ============================================================
-// MAPA — NIVEL ADAPTADO A VERTICAL
+// MAPA — NIVEL AJUSTADO PARA VERTICAL
 // ============================================================
 const LEVEL_WIDTH = 120;
-const LEVEL_HEIGHT = 25;
+const LEVEL_HEIGHT = 20;
 
 function generateLevel() {
   const map = [];
@@ -240,7 +403,6 @@ function generateLevel() {
     map[y] = [];
     for (let x = 0; x < LEVEL_WIDTH; x++) map[y][x] = 0;
   }
-  // Suelo base
   for (let x = 0; x < LEVEL_WIDTH; x++) {
     map[LEVEL_HEIGHT - 1][x] = 1;
     map[LEVEL_HEIGHT - 2][x] = 1;
@@ -248,24 +410,18 @@ function generateLevel() {
   function plat(x, y, w, t = 2) {
     for (let i = 0; i < w; i++) if (x + i < LEVEL_WIDTH) map[y][x + i] = t;
   }
-  // Plataformas distribuidas en el nivel
-  plat(3, 20, 4); plat(10, 18, 3); plat(16, 16, 2, 3); plat(22, 19, 3);
-  plat(28, 15, 4); plat(35, 17, 2, 3); plat(40, 14, 3); plat(46, 18, 2);
-  plat(50, 12, 4); plat(57, 16, 2, 3); plat(62, 13, 3); plat(68, 17, 2);
-  plat(72, 11, 4); plat(78, 15, 2, 3); plat(83, 12, 3); plat(88, 16, 2);
-  plat(92, 10, 4); plat(98, 14, 2, 3); plat(103, 11, 3); plat(108, 15, 2);
-  plat(112, 9, 4); plat(5, 13, 3); plat(12, 11, 2); plat(18, 9, 3);
-  plat(25, 12, 2); plat(32, 8, 4); plat(38, 10, 2, 3); plat(44, 7, 3);
-  plat(52, 9, 2); plat(58, 6, 4); plat(64, 8, 2, 3); plat(70, 5, 3);
-  plat(76, 7, 2); plat(82, 4, 4); plat(88, 6, 2, 3); plat(94, 3, 3);
-  plat(100, 5, 2); plat(106, 2, 4); plat(112, 4, 2, 3); plat(116, 1, 3);
-  // Bandera final
+  plat(3, 16, 4); plat(10, 14, 3); plat(16, 12, 2, 3); plat(22, 15, 3);
+  plat(28, 11, 4); plat(35, 13, 2, 3); plat(40, 10, 3); plat(46, 14, 2);
+  plat(50, 8, 4); plat(57, 12, 2, 3); plat(62, 9, 3); plat(68, 13, 2);
+  plat(72, 7, 4); plat(78, 11, 2, 3); plat(83, 8, 3); plat(88, 12, 2);
+  plat(92, 6, 4); plat(98, 10, 2, 3); plat(103, 7, 3); plat(108, 11, 2);
+  plat(112, 5, 4); plat(5, 9, 3); plat(12, 7, 2); plat(18, 5, 3);
+  plat(25, 8, 2); plat(32, 4, 4); plat(38, 6, 2, 3); plat(44, 3, 3);
+  plat(52, 5, 2); plat(58, 2, 4); plat(64, 4, 2, 3); plat(70, 1, 3);
   map[LEVEL_HEIGHT - 3][LEVEL_WIDTH - 5] = 5;
   map[LEVEL_HEIGHT - 4][LEVEL_WIDTH - 5] = 5;
   map[LEVEL_HEIGHT - 5][LEVEL_WIDTH - 5] = 5;
   map[LEVEL_HEIGHT - 6][LEVEL_WIDTH - 5] = 5;
-  map[LEVEL_HEIGHT - 7][LEVEL_WIDTH - 5] = 5;
-  map[LEVEL_HEIGHT - 8][LEVEL_WIDTH - 5] = 5;
   map[LEVEL_HEIGHT - 3][LEVEL_WIDTH - 4] = 5;
   return map;
 }
@@ -316,14 +472,13 @@ let enemies = [];
 function createCoins() {
   const coins = [];
   const pos = [
-    [4,19],[5,19],[6,19],[11,17],[12,17],[17,15],[18,15],[29,14],[30,14],[31,14],
-    [36,16],[37,16],[41,13],[42,13],[51,11],[52,11],[53,11],[58,15],[59,15],
-    [63,12],[64,12],[69,16],[73,10],[74,10],[75,10],[79,14],[80,14],[84,11],[85,11],
-    [89,15],[93,9],[94,9],[95,9],[99,13],[100,13],[104,10],[105,10],[109,14],
-    [113,8],[114,8],[115,8],[6,12],[7,12],[13,10],[19,8],[26,11],[27,11],
-    [33,7],[34,7],[39,9],[40,9],[45,6],[46,6],[47,6],[53,8],[54,8],
-    [59,5],[60,5],[65,7],[66,7],[71,4],[72,4],[77,6],[78,6],[83,3],[84,3],
-    [89,5],[90,5],[95,2],[96,2],[101,4],[102,4],[107,1],[108,1],[109,1],
+    [4,15],[5,15],[6,15],[11,13],[12,13],[17,11],[18,11],[29,10],[30,10],[31,10],
+    [36,12],[37,12],[41,9],[42,9],[51,7],[52,7],[53,7],[58,11],[59,11],
+    [63,8],[64,8],[69,12],[73,6],[74,6],[75,6],[79,10],[80,10],[84,7],[85,7],
+    [89,11],[93,5],[94,5],[95,5],[99,9],[100,9],[104,6],[105,6],[109,10],
+    [113,4],[114,4],[115,4],[6,8],[7,8],[13,6],[19,4],[26,7],[27,7],
+    [33,3],[34,3],[39,5],[40,5],[45,2],[46,2],[47,2],[53,4],[54,4],
+    [59,1],[60,1],[65,3],[66,3],[71,0],[72,0],
   ];
   pos.forEach(([cx,cy]) => {
     coins.push({x:cx*TILE+8,y:cy*TILE+8,w:16,h:16,collected:false,bob:Math.random()*Math.PI*2});
@@ -358,6 +513,7 @@ function setupTouch(btnId,keyCode){
   const btn=document.getElementById(btnId);
   if(!btn) return;
   const setKey = (val) => { touchKeys[keyCode] = val; };
+
   btn.addEventListener('touchstart',e=>{e.preventDefault();setKey(true);}, {passive:false});
   btn.addEventListener('touchend',e=>{e.preventDefault();setKey(false);}, {passive:false});
   btn.addEventListener('touchcancel',e=>{e.preventDefault();setKey(false);}, {passive:false});
@@ -382,7 +538,10 @@ function selectCharacter(name) {
   tomyCard.setAttribute('aria-pressed', 'true');
 }
 
-function drawCharacterPreview() {
+// ============================================================
+// PREVIEWS DEL MENÚ (TOMY + ARANA)
+// ============================================================
+function drawTomyPreview() {
   const preview = document.getElementById('character-preview');
   const spriteData = spriteLoader.get('ready');
   if (!preview || !spriteData) return;
@@ -401,13 +560,36 @@ function drawCharacterPreview() {
   );
 }
 
+function drawAranaPreview() {
+  const preview = document.getElementById('arana-preview');
+  const spriteData = spriteLoader.get('arana-ready');
+  if (!preview || !spriteData) return;
+  const previewCtx = preview.getContext('2d');
+  const col = aranaPreviewFrame % spriteData.cols;
+  const row = Math.floor(aranaPreviewFrame / spriteData.cols);
+  const dw = 80;
+  const dh = 153;
+  previewCtx.clearRect(0, 0, preview.width, preview.height);
+  previewCtx.imageSmoothingEnabled = true;
+  previewCtx.drawImage(
+    spriteData.image,
+    col * spriteData.frameWidth, row * spriteData.frameHeight,
+    spriteData.frameWidth, spriteData.frameHeight,
+    (preview.width - dw) / 2, 0, dw, dh,
+  );
+}
+
 function updateMenuPreview() {
   if (gameState !== 'menu') return;
   menuPreviewTimer++;
   if (menuPreviewTimer >= 6) {
     menuPreviewTimer = 0;
-    menuPreviewFrame = (menuPreviewFrame + 1) % spriteLoader.get('ready').frames;
-    drawCharacterPreview();
+    const tomyData = spriteLoader.get('ready');
+    const aranaData = spriteLoader.get('arana-ready');
+    if (tomyData) menuPreviewFrame = (menuPreviewFrame + 1) % tomyData.frames;
+    if (aranaData) aranaPreviewFrame = (aranaPreviewFrame + 1) % aranaData.frames;
+    drawTomyPreview();
+    drawAranaPreview();
   }
   requestAnimationFrame(updateMenuPreview);
 }
@@ -504,11 +686,11 @@ function updatePlayer(){
   if(player.y>LEVEL_HEIGHT*TILE+200)playerDie();
   if(player.invincible>0)player.invincible--;
 
-  const moving = Math.abs(player.vx) > 0.5;
-  const hasHorizontalInput = isKeyDown('ArrowLeft') || isKeyDown('KeyA') ||
-                              isKeyDown('ArrowRight') || isKeyDown('KeyD');
+  const hasInput = isKeyDown('ArrowLeft') || isKeyDown('KeyA') ||
+                   isKeyDown('ArrowRight') || isKeyDown('KeyD');
+  const isMoving = Math.abs(player.vx) > 0.15;
 
-  if (player.onGround && !moving && !hasHorizontalInput) {
+  if (player.onGround && !hasInput && !isMoving) {
     animator.setAnimation('ready');
   } else {
     animator.setAnimation('run');
@@ -550,6 +732,7 @@ function playerDie(){
   if(player.invincible>0)return;
   lives--;updateUI();
   spawnParticles(player.x+player.w/2,player.y+player.h/2,'#ef4444',20);
+  audioManager.play('death');
   if(lives<=0)gameOver();
   else{player.invincible=120;player.vy=JUMP_FORCE;player.x=Math.max(64,player.x-200);player.y=200;}
 }
@@ -650,10 +833,10 @@ function draw(){
 
 function drawClouds(){
   const clouds=[
-    {x:80,y:100,s:0.8},{x:250,y:60,s:0.6},{x:450,y:120,s:0.9},{x:650,y:80,s:0.7},
-    {x:900,y:110,s:0.85},{x:1150,y:70,s:0.75},{x:1400,y:130,s:0.9},{x:1650,y:90,s:0.8},
-    {x:1900,y:105,s:0.85},{x:2150,y:65,s:0.7},{x:2400,y:115,s:0.9},{x:2650,y:75,s:0.8},
-    {x:2900,y:100,s:0.85},{x:3150,y:60,s:0.7},{x:3400,y:120,s:0.9},
+    {x:80,y:90,s:0.8},{x:250,y:50,s:0.6},{x:450,y:110,s:0.9},{x:650,y:70,s:0.7},
+    {x:900,y:100,s:0.85},{x:1150,y:60,s:0.75},{x:1400,y:120,s:0.9},{x:1650,y:80,s:0.8},
+    {x:1900,y:95,s:0.85},{x:2150,y:55,s:0.7},{x:2400,y:105,s:0.9},{x:2650,y:65,s:0.8},
+    {x:2900,y:90,s:0.85},{x:3150,y:50,s:0.7},{x:3400,y:110,s:0.9},
   ];
   ctx.fillStyle='rgba(255,255,255,0.12)';
   clouds.forEach(c=>{
@@ -670,7 +853,7 @@ function drawMountains(){
   for(let i=0;i<15;i++){
     const mx=(i*350-cameraX*0.2)%(LEVEL_WIDTH*TILE);
     const drawX=mx<-200?mx+LEVEL_WIDTH*TILE:mx;
-    ctx.beginPath();ctx.moveTo(drawX,canvas.height);ctx.lineTo(drawX+80,canvas.height-180);ctx.lineTo(drawX+160,canvas.height);ctx.fill();
+    ctx.beginPath();ctx.moveTo(drawX,canvas.height);ctx.lineTo(drawX+80,canvas.height-160);ctx.lineTo(drawX+160,canvas.height);ctx.fill();
   }
 }
 
@@ -691,17 +874,40 @@ function startTimer(){
 }
 
 function startGame(){
+  audioManager.init();
+  audioManager.resumeContext();
+
   document.getElementById('start-screen').classList.add('hidden');
   document.getElementById('gameover-screen').classList.add('hidden');
   document.getElementById('win-screen').classList.add('hidden');
   document.getElementById('menu-button').classList.remove('hidden');
-  document.getElementById('mobile-controls').classList.remove('hidden');
+  document.getElementById('mobile-controls').style.display = 'flex';
   score=0;lives=3;timeLeft=300;cameraX=0;
   player.x=64;player.y=GROUND_Y-player.h;player.vx=0;player.vy=0;player.invincible=0;
   player.onGround=true;
   player.celebrating=false;player.celebrateTimer=0;
   levelMap=generateLevel();enemies=createEnemies();coins=createCoins();particles=[];
   gameState='playing';updateUI();startTimer();gameLoop();
+
+  audioManager.stopAll();
+  const startSound = audioManager.sounds['gameStart'];
+  if (startSound) {
+    startSound.currentTime = 0;
+    const p = startSound.play();
+    if (p) {
+      p.then(() => {
+        startSound.onended = () => {
+          audioManager.playMusic('gameAdventure');
+        };
+      }).catch(() => {
+        audioManager.playMusic('gameAdventure');
+      });
+    } else {
+      audioManager.playMusic('gameAdventure');
+    }
+  } else {
+    audioManager.playMusic('gameAdventure');
+  }
 }
 
 function restartGame(){startGame();}
@@ -714,9 +920,11 @@ function returnToMenu(){
   document.getElementById('gameover-screen').classList.add('hidden');
   document.getElementById('win-screen').classList.add('hidden');
   document.getElementById('menu-button').classList.add('hidden');
-  document.getElementById('mobile-controls').classList.add('hidden');
+  document.getElementById('mobile-controls').style.display = 'none';
   document.getElementById('start-screen').classList.remove('hidden');
-  drawMenu();drawCharacterPreview();requestAnimationFrame(updateMenuPreview);
+  audioManager.stopAll();
+  audioManager.playMusic('selectPlayer');
+  drawMenu();drawTomyPreview();drawAranaPreview();requestAnimationFrame(updateMenuPreview);
 }
 
 function gameOver(){
@@ -724,7 +932,9 @@ function gameOver(){
   if(timerInterval)clearInterval(timerInterval);
   document.getElementById('final-score').textContent=score;
   document.getElementById('gameover-screen').classList.remove('hidden');
-  document.getElementById('mobile-controls').classList.add('hidden');
+  document.getElementById('mobile-controls').style.display = 'none';
+  audioManager.stopAll();
+  audioManager.play('fail');
 }
 
 function winGame(){
@@ -737,8 +947,10 @@ function winGame(){
   drawWinCharacter();requestAnimationFrame(updateWinPreview);
   document.getElementById('win-score').textContent=score;
   document.getElementById('win-screen').classList.remove('hidden');
-  document.getElementById('mobile-controls').classList.add('hidden');
+  document.getElementById('mobile-controls').style.display = 'none';
   spawnParticles(player.x+player.w/2,player.y,'#fbbf24',30);
+  audioManager.stopAll();
+  audioManager.playVictoryFanfare();
 }
 
 function gameLoop(){
@@ -761,7 +973,8 @@ function drawMenu(){
 spriteLoader.onComplete = () => {
   animator = new Animator(spriteLoader);
   drawMenu();
-  drawCharacterPreview();
+  drawTomyPreview();
+  drawAranaPreview();
   requestAnimationFrame(updateMenuPreview);
 };
 

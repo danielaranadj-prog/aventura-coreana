@@ -21,19 +21,20 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
     font-family: 'Segoe UI', system-ui, sans-serif;
     color: #fff;
   }
   #game-wrapper {
     position: relative;
     width: 100%;
-    max-width: 450px;
+    max-width: 420px;
     height: 100vh;
     max-height: 100vh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    background: #0a0a1a;
   }
   canvas {
     display: block;
@@ -162,8 +163,15 @@
     border-color: #f59e0b;
     box-shadow: 0 0 18px rgba(245,158,11,.3);
   }
-  .character-card:disabled { opacity: .45; cursor: not-allowed; }
-  #character-preview {
+  .character-card:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+    border-color: #1e293b;
+  }
+  .character-card:disabled .character-status {
+    color: #64748b;
+  }
+  #character-preview, #arana-preview {
     display: block;
     width: 100px;
     height: 150px;
@@ -250,17 +258,25 @@
     #start-screen h1 { font-size: 26px; }
     .screen-title { font-size: 24px; }
   }
+  @media (min-width: 500px) {
+    #game-wrapper {
+      height: 90vh;
+      max-height: 900px;
+      border-radius: 16px;
+      box-shadow: 0 0 40px rgba(220,38,38,0.15);
+    }
+  }
 </style>
 </head>
 <body>
 
 <div id="game-wrapper">
-  <canvas id="game" width="400" height="720"></canvas>
+  <canvas id="game" width="400" height="640"></canvas>
 
   <div id="loading">
     <div id="loading-spinner"></div>
     <span>Cargando sprites...</span>
-    <div id="loading-status">0 / 4 archivos cargados</div>
+    <div id="loading-status">0 / 5 archivos cargados</div>
   </div>
 
   <div id="ui-overlay">
@@ -279,10 +295,10 @@
         <span class="character-name">TOMY</span>
         <span class="character-status">Seleccionado</span>
       </button>
-      <button class="character-card" type="button" disabled title="Próximamente">
-        <span class="future-avatar">?</span>
-        <span class="character-name">Próximamente</span>
-        <span class="character-status">Nuevo personaje</span>
+      <button class="character-card" id="character-arana" type="button" disabled title="Próximamente">
+        <canvas id="arana-preview" width="100" height="150"></canvas>
+        <span class="character-name">ARANA</span>
+        <span class="character-status">Próximamente</span>
       </button>
     </div>
     <button class="btn btn-primary" onclick="startGame()">▶ Jugar</button>
