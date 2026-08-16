@@ -509,21 +509,21 @@ function generateLevel() {
   }
 
   // Plataformas rediseñadas — más bajas y accesibles
-  plat(3, 17, 4);   plat(10, 16, 3);  plat(16, 15, 2, 3); plat(22, 16, 3);
-  plat(28, 14, 4);  plat(35, 15, 2, 3); plat(40, 14, 3);  plat(46, 16, 2);
-  plat(50, 13, 4);  plat(57, 15, 2, 3); plat(62, 13, 3);  plat(68, 15, 2);
-  plat(72, 12, 4);  plat(78, 14, 2, 3); plat(83, 13, 3);  plat(88, 15, 2);
-  plat(92, 11, 4);  plat(98, 14, 2, 3); plat(103, 12, 3); plat(108, 14, 2);
-  plat(112, 11, 4); plat(5, 14, 3);    plat(12, 13, 2);  plat(18, 12, 3);
-  plat(25, 13, 2);  plat(32, 11, 4);   plat(38, 12, 2, 3); plat(44, 10, 3);
-  plat(52, 12, 2);  plat(58, 9, 4);    plat(64, 11, 2, 3); plat(70, 9, 3);
+  plat(3, 14, 4);   plat(10, 13, 3);  plat(16, 12, 2, 3); plat(22, 13, 3);
+  plat(28, 11, 4);  plat(35, 12, 2, 3); plat(40, 11, 3);  plat(46, 13, 2);
+  plat(50, 10, 4);  plat(57, 12, 2, 3); plat(62, 10, 3);  plat(68, 12, 2);
+  plat(72, 9, 4);   plat(78, 11, 2, 3); plat(83, 10, 3);  plat(88, 12, 2);
+  plat(92, 8, 4);   plat(98, 11, 2, 3); plat(103, 9, 3);  plat(108, 11, 2);
+  plat(112, 8, 4);  plat(5, 11, 3);    plat(12, 10, 2);  plat(18, 9, 3);
+  plat(25, 10, 2);  plat(32, 8, 4);   plat(38, 9, 2, 3); plat(44, 7, 3);
+  plat(52, 9, 2);   plat(58, 6, 4);   plat(64, 8, 2, 3); plat(70, 6, 3);
 
   // Bandera final
-  map[LEVEL_HEIGHT - 3][LEVEL_WIDTH - 5] = 5;
-  map[LEVEL_HEIGHT - 4][LEVEL_WIDTH - 5] = 5;
-  map[LEVEL_HEIGHT - 5][LEVEL_WIDTH - 5] = 5;
   map[LEVEL_HEIGHT - 6][LEVEL_WIDTH - 5] = 5;
-  map[LEVEL_HEIGHT - 3][LEVEL_WIDTH - 4] = 5;
+  map[LEVEL_HEIGHT - 7][LEVEL_WIDTH - 5] = 5;
+  map[LEVEL_HEIGHT - 8][LEVEL_WIDTH - 5] = 5;
+  map[LEVEL_HEIGHT - 9][LEVEL_WIDTH - 5] = 5;
+  map[LEVEL_HEIGHT - 6][LEVEL_WIDTH - 4] = 5;
   return map;
 }
 let levelMap = generateLevel();
@@ -573,13 +573,13 @@ let enemies = [];
 function createCoins() {
   const coins = [];
   const pos = [
-    [4,16],[5,16],[6,16],[11,15],[12,15],[17,14],[18,14],[29,13],[30,13],[31,13],
-    [36,14],[37,14],[41,13],[42,13],[51,12],[52,12],[53,12],[58,14],[59,14],
-    [63,12],[64,12],[69,14],[73,11],[74,11],[75,11],[79,13],[80,13],[84,12],[85,12],
-    [89,14],[93,10],[94,10],[95,10],[99,13],[100,13],[104,11],[105,11],[109,13],
-    [113,10],[114,10],[115,10],[6,13],[7,13],[13,12],[19,11],[26,12],[27,12],
-    [33,10],[34,10],[39,11],[40,11],[45,9],[46,9],[47,9],[53,11],[54,11],
-    [59,8],[60,8],[65,10],[66,10],[71,8],[72,8],
+    [4,13],[5,13],[6,13],[11,12],[12,12],[17,11],[18,11],[29,10],[30,10],[31,10],
+    [36,11],[37,11],[41,10],[42,10],[51,9],[52,9],[53,9],[58,11],[59,11],
+    [63,9],[64,9],[69,11],[73,8],[74,8],[75,8],[79,10],[80,10],[84,9],[85,9],
+    [89,11],[93,7],[94,7],[95,7],[99,10],[100,10],[104,8],[105,8],[109,10],
+    [113,7],[114,7],[115,7],[6,10],[7,10],[13,9],[19,8],[26,9],[27,9],
+    [33,7],[34,7],[39,8],[40,8],[45,6],[46,6],[47,6],[53,8],[54,8],
+    [59,5],[60,5],[65,7],[66,7],[71,5],[72,5],
   ];
 
   // Solo 3 prispas en posiciones estratégicas
@@ -721,7 +721,7 @@ function updateMenuPreview() {
 
 function drawWinCharacter() {
   const preview = document.getElementById('win-character-preview');
-  const spriteData = spriteLoader.get('run');
+  const spriteData = spriteLoader.get('celebrate');
   if (!preview || !spriteData) return;
   const previewCtx = preview.getContext('2d');
 
