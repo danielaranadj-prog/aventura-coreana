@@ -2032,7 +2032,7 @@ function updatePlayer() {
 
 
 
- // Muerte por caer en hueco (Reemplaza tu bloque actual por este)
+// Muerte por caer en hueco (Reemplaza tu bloque actual por este)
   const tileBelowLeft = getTile(player.x + 4, player.y + player.h + 2);
   const tileBelowRight = getTile(player.x + player.w - 4, player.y + player.h + 2);
   
@@ -2055,8 +2055,7 @@ function updatePlayer() {
   if (player.invincible > 0) player.invincible--;
 }
 
-
-
+function updateAnimations() {
   const hasInput = isKeyDown('ArrowLeft') || isKeyDown('KeyA') ||
 
                    isKeyDown('ArrowRight') || isKeyDown('KeyD');
@@ -2079,8 +2078,8 @@ function updatePlayer() {
 
     animator.update();
 
+  }
 }
-
 
 
 
