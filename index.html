@@ -78,7 +78,7 @@
   }
   #menu-button:active { background: #4a1a6b; }
 
-  /* ===== CONTROLES MÓVILES ===== */
+  /* ===== CONTROLES MÓVILES ESTILO SNES ===== */
   #mobile-controls {
     display: none;
     position: absolute;
@@ -86,38 +86,103 @@
     left: 0; right: 0;
     justify-content: space-between;
     align-items: flex-end;
-    padding: 12px 16px 24px;
+    padding: 14px 18px 32px;
     z-index: 30;
     pointer-events: none;
-    background: linear-gradient(to top, rgba(13,2,33,0.5), transparent);
   }
-  .mobile-btn {
-    width: 68px;
-    height: 68px;
-    border-radius: 50%;
-    background: rgba(255,0,255,0.1);
-    border: 2px solid rgba(0,255,255,0.35);
-    color: #00ffff;
-    font-size: 26px;
+
+  /* D-Pad */
+  .dpad {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    pointer-events: auto;
+  }
+  .dpad-row {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .dpad-btn {
+    width: 46px;
+    height: 46px;
     display: flex;
     align-items: center;
     justify-content: center;
+    background: rgba(0, 255, 255, 0.04);
+    border: 1px solid rgba(0, 255, 255, 0.18);
+    color: rgba(0, 255, 255, 0.45);
+    font-size: 13px;
+    border-radius: 8px;
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    touch-action: manipulation;
     user-select: none;
     -webkit-user-select: none;
+    pointer-events: auto;
+    transition: background 0.08s, transform 0.08s;
+  }
+  .dpad-btn:active {
+    background: rgba(0, 255, 255, 0.18);
+    transform: scale(0.92);
+  }
+  .dpad-center {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: rgba(0, 255, 255, 0.06);
+    border: 1px solid rgba(0, 255, 255, 0.1);
+  }
+
+  /* Botones SNES */
+  .snes-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    pointer-events: auto;
+  }
+  .snes-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+  .snes-btn {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 0, 255, 0.05);
+    border: 1.5px solid rgba(255, 0, 255, 0.2);
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 15px;
+    font-weight: 800;
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
     touch-action: manipulation;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    user-select: none;
+    -webkit-user-select: none;
     pointer-events: auto;
     transition: background 0.08s, transform 0.08s, box-shadow 0.15s;
-    text-shadow: 0 0 10px rgba(0,255,255,0.6);
-    box-shadow: 0 0 15px rgba(0,255,255,0.15);
+    box-shadow: 0 0 12px rgba(255, 0, 255, 0.06);
   }
-  .mobile-btn:active {
-    background: rgba(0,255,255,0.25);
-    transform: scale(0.9);
-    box-shadow: 0 0 25px rgba(0,255,255,0.4);
+  .snes-btn:active {
+    background: rgba(255, 0, 255, 0.2);
+    transform: scale(0.92);
+    box-shadow: 0 0 22px rgba(255, 0, 255, 0.25);
   }
-  .mobile-dpad { display: flex; gap: 12px; }
+  .snes-label {
+    font-size: 8px;
+    color: rgba(255, 255, 255, 0.3);
+    text-align: center;
+    margin-top: 1px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
 
   /* ===== PANTALLAS ===== */
   #start-screen, #gameover-screen, #win-screen {
@@ -230,7 +295,7 @@
   }
   .hidden { display: none !important; }
 
-  /* ===== PANTALLA DE CARGA CON PORTADA ===== */
+  /* ===== PANTALLA DE CARGA ===== */
   #loading {
     position: absolute;
     inset: 0;
@@ -292,9 +357,6 @@
     transition: width 0.3s ease;
     box-shadow: 0 0 15px rgba(0,255,255,0.6);
   }
-  .loading-status {
-    display: none; /* Ocultamos el contador numérico */
-  }
   .loading-blink {
     font-size: 11px;
     color: #00ffff;
@@ -314,12 +376,16 @@
 
   /* ===== RESPONSIVE ===== */
   @media (max-height: 700px) {
-    .mobile-btn { width: 58px; height: 58px; font-size: 22px; }
-    #mobile-controls { padding: 8px 12px 16px; }
+    .dpad-btn { width: 40px; height: 40px; font-size: 11px; }
+    .dpad-center { width: 40px; height: 40px; }
+    .snes-btn { width: 48px; height: 48px; font-size: 13px; }
+    #mobile-controls { padding: 10px 14px 22px; }
   }
   @media (max-height: 600px) {
-    .mobile-btn { width: 52px; height: 52px; font-size: 20px; }
-    #mobile-controls { padding: 6px 10px 12px; }
+    .dpad-btn { width: 36px; height: 36px; font-size: 10px; }
+    .dpad-center { width: 36px; height: 36px; }
+    .snes-btn { width: 44px; height: 44px; font-size: 12px; }
+    #mobile-controls { padding: 8px 12px 18px; }
     #start-screen h1 { font-size: 26px; }
     .screen-title { font-size: 24px; }
   }
@@ -390,12 +456,29 @@
     <button class="btn" onclick="returnToMenu()">☰ Menú</button>
   </div>
 
+  <!-- CONTROLES MÓVILES ESTILO SNES -->
   <div id="mobile-controls" class="hidden">
-    <div class="mobile-dpad">
-      <div class="mobile-btn" id="btn-left">◀</div>
-      <div class="mobile-btn" id="btn-right">▶</div>
+    <div class="dpad">
+      <div class="dpad-btn dpad-up" id="btn-up">▲</div>
+      <div class="dpad-row">
+        <div class="dpad-btn dpad-left" id="btn-left">◀</div>
+        <div class="dpad-center"></div>
+        <div class="dpad-btn dpad-right" id="btn-right">▶</div>
+      </div>
+      <div class="dpad-btn dpad-down" id="btn-down">▼</div>
     </div>
-    <div class="mobile-btn" id="btn-jump">▲</div>
+    <div class="snes-buttons">
+      <div class="snes-row">
+        <div class="snes-btn" id="btn-jump">
+          A
+          <span class="snes-label">Saltar</span>
+        </div>
+        <div class="snes-btn" id="btn-run">
+          B
+          <span class="snes-label">Correr</span>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
