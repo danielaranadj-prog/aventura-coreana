@@ -120,7 +120,7 @@ const AUDIO_CONFIG = {
 
   gameAdventure:{ src: 'assets/game-adventure.mp3', loop: true,  volume: 0.5 },
 
-  death:        { src: 'assets/death.mp3',         loop: false, volume: 0.6 },
+  death:        { src: 'assets/death.mp3',         loop: false, volume: 0.8 },
 
   fail:         { src: 'assets/fail.mp3',          loop: false, volume: 0.8 },
 
@@ -521,6 +521,16 @@ let winPreviewFrame = 0;
 let winPreviewTimer = 0;
 
 
+// ============================================================
+// CONTROL DE FPS
+// ============================================================
+const TARGET_FPS = 30;
+const TIME_STEP = 1000 / TARGET_FPS; // ~33.333 ms por frame
+let lastTime = 0;
+let accumulator = 0;
+
+
+
 
 // ============================================================
 
@@ -622,7 +632,10 @@ class SpriteLoader {
 
         document.getElementById('start-screen').classList.remove('hidden');
 
-        if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = null; gameState = 'menu';
+        if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = null;
+  lastTime = 0;
+  accumulator = 0;
+  gameState = 'menu';
 
         audioManager.init();
 
@@ -658,7 +671,10 @@ class SpriteLoader {
 
         document.getElementById('start-screen').classList.remove('hidden');
 
-        if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = null; gameState = 'menu';
+        if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = null;
+  lastTime = 0;
+  accumulator = 0;
+  gameState = 'menu';
 
         audioManager.init();
 
@@ -3011,7 +3027,16 @@ function startGame() {
 
   levelMap = generateLevel(); enemies = createEnemies(); coins = createCoins(); particles = [];
 
-  if (animationFrameId) cancelAnimationFrame(animationFrameId); gameState = 'playing'; updateUI(); startTimer(); animationFrameId = requestAnimationFrame(gameLoop);
+  if (animationFrameId) cancelAnimationFrame(animationFrameId);
+
+  // Resetear el control de tiempo para 30 FPS
+  lastTime = 0;
+  accumulator = 0;
+
+  gameState = 'playing';
+  updateUI();
+  startTimer();
+  animationFrameId = requestAnimationFrame(gameLoop);
 
 
 
@@ -3069,7 +3094,10 @@ function returnToMenu() {
 
   player.vx = 0; player.vy = 0; player.celebrating = false; player.celebrateTimer = 0;
 
-  if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = null; gameState = 'menu';
+  if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = null;
+  lastTime = 0;
+  accumulator = 0;
+  gameState = 'menu';
 
   document.getElementById('gameover-screen').classList.add('hidden');
 
@@ -3099,7 +3127,10 @@ function returnToMenu() {
 
 function gameOver() {
 
-  if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = null; gameState = 'gameover';
+  if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = null;
+  lastTime = 0;
+  accumulator = 0;
+  gameState = 'gameover';
 
   if (timerInterval) clearInterval(timerInterval);
 
@@ -3125,7 +3156,10 @@ function gameOver() {
 
 function winGame() {
 
-  if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = null; gameState = 'win';
+  if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = null;
+  lastTime = 0;
+  accumulator = 0;
+  gameState = 'win';
 
   if (timerInterval) clearInterval(timerInterval);
 
@@ -3168,14 +3202,40 @@ function winGame() {
 
 
 
-function gameLoop() {
+function gameLoop(currentTime) {
+  // Siempre pedimos el siguiente frame para mantener el loop activo
+  animationFrameId = requestAnimationFrame(gameLoop);
 
   if (gameState !== 'playing') return;
 
-  updatePlayer(); updateEnemies(); updateCoins(); updateParticles(); updateCamera(); draw();
+  // Inicializar el tiempo en el primer frame
+  if (!lastTime) {
+    lastTime = currentTime;
+    return; // Saltamos el primer tick para evitar un delta enorme
+  }
 
-  animationFrameId = requestAnimationFrame(gameLoop);
+  // Calcular tiempo transcurrido desde el último frame
+  const deltaTime = currentTime - lastTime;
+  lastTime = currentTime;
 
+  // Acumulamos el tiempo sobrante de frames anteriores
+  accumulator += deltaTime;
+
+  // Ejecutamos la lógica de actualización en pasos fijos de 30 FPS
+  // El while permite "ponerse al día" si hubo un lag momentáneo
+  while (accumulator >= TIME_STEP) {
+    updatePlayer();
+    updateEnemies();
+    updateCoins();
+    updateParticles();
+    updateCamera();
+
+    // Restamos el tiempo consumido, dejando el sobrante para el siguiente frame
+    accumulator -= TIME_STEP;
+  }
+
+  // Renderizamos una sola vez por ciclo de rAF
+  draw();
 }
 
 
