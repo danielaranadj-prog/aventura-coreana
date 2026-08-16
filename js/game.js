@@ -732,28 +732,23 @@ function drawWinCharacter() {
   const col = winPreviewFrame % spriteData.cols;
   const row = Math.floor(winPreviewFrame / spriteData.cols);
 
-  // Calcular aspect ratio REAL desde la imagen cargada (más preciso que frameWidth/Height)
-  const realFrameW = spriteData.image.width / spriteData.cols;
-  const realFrameH = spriteData.image.height / spriteData.rows;
-  const aspect = realFrameW / realFrameH;
+  // Usar las dimensiones EXACTAS del config (como Animator.draw)
+  // para evitar deformación por padding o tamaño real de imagen
+  const fw = spriteData.frameWidth;
+  const fh = spriteData.frameHeight;
+  const scale = spriteData.scale || 0.08;
 
-  const maxH = preview.height - 4;
-  const maxW = preview.width - 4;
-  let dh = maxH;
-  let dw = dh * aspect;
-  if (dw > maxW) {
-    dw = maxW;
-    dh = dw / aspect;
-  }
+  const dw = fw * scale;
+  const dh = fh * scale;
 
   previewCtx.clearRect(0, 0, preview.width, preview.height);
   previewCtx.imageSmoothingEnabled = false;
   previewCtx.drawImage(
     spriteData.image,
-    Math.round(col * realFrameW), Math.round(row * realFrameH),
-    Math.round(realFrameW), Math.round(realFrameH),
-    Math.round((preview.width - dw) / 2), Math.round((preview.height - dh) / 2),
-    Math.round(dw), Math.round(dh)
+    col * fw, row * fh,
+    fw, fh,
+    (preview.width - dw) / 2, (preview.height - dh) / 2,
+    dw, dh
   );
 }
 
@@ -762,9 +757,9 @@ function updateWinPreview() {
   winPreviewTimer++;
   if (winPreviewTimer >= 5) {
     winPreviewTimer = 0;
-    const runData = spriteLoader.get('run');
-    if (runData) {
-      winPreviewFrame = (winPreviewFrame + 1) % runData.frames;
+    const celData = spriteLoader.get('celebrate');
+    if (celData) {
+      winPreviewFrame = (winPreviewFrame + 1) % celData.frames;
       drawWinCharacter();
     }
   }
