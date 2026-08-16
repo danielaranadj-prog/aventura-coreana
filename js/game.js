@@ -510,7 +510,7 @@ function generateLevel() {
 
   // Plataformas rediseñadas — más bajas y accesibles
   plat(3, 14, 4);   plat(10, 13, 3);  plat(16, 14, 2, 3); plat(22, 13, 3);
-  plat(28, 11, 4);  plat(35, 16, 2, 3); plat(40, 11, 3);  plat(46, 13, 2);
+  plat(28, 11, 4);  plat(35, 14, 2, 3); plat(40, 11, 3);  plat(46, 13, 2);
   plat(50, 10, 4);  plat(57, 11, 2, 3); plat(62, 10, 3);  plat(68, 12, 2);
   plat(72, 9, 4);   plat(78, 10, 2, 3); plat(83, 10, 3);  plat(88, 12, 2);
   plat(92, 8, 4);   plat(98, 10, 2, 3); plat(103, 9, 3);  plat(108, 11, 2);
