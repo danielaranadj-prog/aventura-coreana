@@ -489,7 +489,86 @@
     50% { opacity: 0; }
   }
 
+  /* ===== GAME OVER SCREEN ===== */
+  #gameover-screen {
+    background: #000 !important;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    overflow: hidden;
+  }
+  #gameover-screen .stars {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+  #gameover-screen .star {
+    position: absolute;
+    border-radius: 50%;
+    box-shadow: 0 0 3px currentColor;
+  }
+  #gameover-screen .go-title {
+    position: relative;
+    z-index: 1;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    font-size: 28px;
+    color: #fff;
+    text-shadow: 3px 3px 0 #222;
+    letter-spacing: 4px;
+    margin-bottom: 36px;
+    line-height: 1.4;
+  }
+  #gameover-screen .go-question {
+    position: relative;
+    z-index: 1;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    font-size: 12px;
+    color: #00ffff;
+    margin-bottom: 28px;
+    letter-spacing: 2px;
+    text-shadow: 0 0 8px rgba(0,255,255,0.4);
+  }
+  #gameover-screen .go-options {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 50px;
+    align-items: center;
+  }
+  #gameover-screen .go-btn {
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    font-size: 16px;
+    color: #fff;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 12px 24px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: transform 0.1s, color 0.15s;
+    text-shadow: 2px 2px 0 #222;
+    touch-action: manipulation;
+  }
+  #gameover-screen .go-btn:hover,
+  #gameover-screen .go-btn:focus {
+    transform: scale(1.12);
+    color: #ff00ff;
+    outline: none;
+  }
+  #gameover-screen .go-btn:active {
+    transform: scale(0.95);
+  }
+  #gameover-screen .go-score {
+    position: relative;
+    z-index: 1;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    font-size: 9px;
+    color: #ff69b4;
+    margin-bottom: 16px;
+    text-shadow: 0 0 6px rgba(255,105,180,0.4);
+  }
+
   /* ===== RESPONSIVE ===== */
+
   @media (max-height: 700px) {
     .dpad-btn { width: 44px; height: 44px; font-size: 14px; }
     .dpad-center { width: 44px; height: 44px; }
@@ -542,6 +621,7 @@
   .win-score-box strong { font-size: 22px; color: #00ffff; }
   .btn-secondary-menu { background: rgba(45, 27, 78, 0.9); border: 1px solid rgba(255, 105, 180, 0.5); color: #ff69b4; padding: 10px; border-radius: 10px; cursor: pointer; }
 </style>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -590,10 +670,14 @@
   </div>
 
   <div id="gameover-screen" class="hidden">
-    <div class="screen-title">💀 GAME OVER</div>
-    <div class="screen-sub">Puntuación: <span id="final-score">0</span></div>
-    <button class="btn btn-primary" onclick="restartGame()">↻ Reintentar</button>
-    <button class="btn" onclick="returnToMenu()">☰ Menú</button>
+    <div class="stars" id="go-stars"></div>
+    <div class="go-title">GAME OVER</div>
+    <div class="go-score">PUNTUACIÓN: <span id="final-score">0</span></div>
+    <div class="go-question">PLAY AGAIN ?</div>
+    <div class="go-options">
+      <button class="go-btn" onclick="restartGame()">YES</button>
+      <button class="go-btn" onclick="returnToMenu()">NO</button>
+    </div>
   </div>
 
   <div id="win-screen" class="hidden">
@@ -636,5 +720,25 @@
   </div>
 
 <script src="js/game.js"></script>
+<script>
+(function() {
+  const container = document.getElementById('go-stars');
+  if (!container) return;
+  const colors = ['#fff','#ff4444','#ffff44','#ff4444','#fff','#44ffff','#ff44ff','#ff8888','#ffff88'];
+  for (let i = 0; i < 100; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 100 + '%';
+    const c = colors[Math.floor(Math.random() * colors.length)];
+    star.style.color = c;
+    star.style.background = c;
+    const s = 1 + Math.random() * 2.5;
+    star.style.width = s + 'px';
+    star.style.height = s + 'px';
+    container.appendChild(star);
+  }
+})();
+</script>
 </body>
 </html>

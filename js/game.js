@@ -522,12 +522,8 @@ let winPreviewTimer = 0;
 
 
 // ============================================================
-// CONTROL DE FPS
+// CONTROL DE FPS (sin tope — velocidad nativa del dispositivo)
 // ============================================================
-const TARGET_FPS = 30;
-const TIME_STEP = 1000 / TARGET_FPS; // ~33.333 ms por frame
-let lastTime = 0;
-let accumulator = 0;
 
 
 
@@ -633,8 +629,6 @@ class SpriteLoader {
         document.getElementById('start-screen').classList.remove('hidden');
 
         if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = null;
-  lastTime = 0;
-  accumulator = 0;
   gameState = 'menu';
 
         audioManager.init();
@@ -672,8 +666,6 @@ class SpriteLoader {
         document.getElementById('start-screen').classList.remove('hidden');
 
         if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = null;
-  lastTime = 0;
-  accumulator = 0;
   gameState = 'menu';
 
         audioManager.init();
@@ -3095,8 +3087,6 @@ function returnToMenu() {
   player.vx = 0; player.vy = 0; player.celebrating = false; player.celebrateTimer = 0;
 
   if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = null;
-  lastTime = 0;
-  accumulator = 0;
   gameState = 'menu';
 
   document.getElementById('gameover-screen').classList.add('hidden');
@@ -3128,8 +3118,6 @@ function returnToMenu() {
 function gameOver() {
 
   if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = null;
-  lastTime = 0;
-  accumulator = 0;
   gameState = 'gameover';
 
   if (timerInterval) clearInterval(timerInterval);
@@ -3157,8 +3145,6 @@ function gameOver() {
 function winGame() {
 
   if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = null;
-  lastTime = 0;
-  accumulator = 0;
   gameState = 'win';
 
   if (timerInterval) clearInterval(timerInterval);
@@ -3202,39 +3188,16 @@ function winGame() {
 
 
 
-function gameLoop(currentTime) {
-  // Siempre pedimos el siguiente frame para mantener el loop activo
+function gameLoop() {
   animationFrameId = requestAnimationFrame(gameLoop);
 
   if (gameState !== 'playing') return;
 
-  // Inicializar el tiempo en el primer frame
-  if (!lastTime) {
-    lastTime = currentTime;
-    return; // Saltamos el primer tick para evitar un delta enorme
-  }
-
-  // Calcular tiempo transcurrido desde el último frame
-  const deltaTime = currentTime - lastTime;
-  lastTime = currentTime;
-
-  // Acumulamos el tiempo sobrante de frames anteriores
-  accumulator += deltaTime;
-
-  // Ejecutamos la lógica de actualización en pasos fijos de 30 FPS
-  // El while permite "ponerse al día" si hubo un lag momentáneo
-  while (accumulator >= TIME_STEP) {
-    updatePlayer();
-    updateEnemies();
-    updateCoins();
-    updateParticles();
-    updateCamera();
-
-    // Restamos el tiempo consumido, dejando el sobrante para el siguiente frame
-    accumulator -= TIME_STEP;
-  }
-
-  // Renderizamos una sola vez por ciclo de rAF
+  updatePlayer();
+  updateEnemies();
+  updateCoins();
+  updateParticles();
+  updateCamera();
   draw();
 }
 
