@@ -79,6 +79,30 @@ const SPRITE_CONFIG = {
 
     },
 
+    'arana-attack': {
+
+      src: 'assets/arana-attack.png',
+
+      frames: 16, speed: 2, cols: 4, rows: 4,
+
+      frameWidth: 447, frameHeight: 664,
+
+      scale: 0.085, offsetX: -24, offsetY: -58,
+
+    },
+
+    'arana-kick': {
+
+      src: 'assets/arana-kick.png',
+
+      frames: 16, speed: 2, cols: 4, rows: 4,
+
+      frameWidth: 447, frameHeight: 664,
+
+      scale: 0.085, offsetX: -24, offsetY: -58,
+
+    },
+
 
     prispas: {
 
@@ -733,7 +757,11 @@ class Animator {
 
       'celebrate': 'arana-celebrate',
 
-      'ready': 'arana-ready'
+      'ready': 'arana-ready',
+
+      'attack': 'arana-attack',
+
+      'kick': 'arana-kick'
 
     };
 
@@ -1224,6 +1252,14 @@ const player = {
 
   celebrateTimer: 0,
 
+  attacking: false,
+
+  attackTimer: 0,
+
+  attackCooldown: 0,
+
+  attackType: 'punch',
+
 
 
 };
@@ -1589,6 +1625,8 @@ setupTouch('btn-jump', 'ArrowUp');   // botón A = saltar
 
 setupTouch('btn-run', 'ShiftLeft');    // botón B = correr
 
+setupTouch('btn-attack', 'KeyZ');      // botón C = atacar
+
 
 
 function isKeyDown(code) { return keys[code] || touchKeys[code]; }
@@ -1930,6 +1968,78 @@ function updatePlayer() {
 
 
 
+  // ── ATAQUE DE ARANA ──
+
+  if ((isKeyDown('KeyZ') || isKeyDown('KeyC')) && player.attackCooldown <= 0 && !player.attacking && selectedCharacter === 'arana') {
+
+    player.attacking = true;
+
+    player.attackTimer = 26;
+
+    player.attackCooldown = 55;
+
+    player.attackType = player.onGround ? 'punch' : 'kick';
+
+    audioManager.play('stomp');
+
+  }
+
+  if (player.attacking) {
+
+    player.attackTimer--;
+
+    if (player.attackTimer <= 0) player.attacking = false;
+
+  }
+
+  if (player.attackCooldown > 0) player.attackCooldown--;
+
+
+
+  // Hitbox de ataque
+
+  if (player.attacking) {
+
+    const isKick = player.attackType === 'kick';
+
+    const reach = isKick ? 28 : 22;
+
+    const attackRect = {
+
+      x: player.facing > 0 ? player.x + player.w : player.x - reach,
+
+      y: player.y + (isKick ? 14 : 6),
+
+      w: player.w + reach,
+
+      h: isKick ? player.h - 4 : player.h - 12
+
+    };
+
+    enemies.forEach(e => {
+
+      if (!e.dead && rectIntersect(attackRect, e)) {
+
+        e.dead = true;
+
+        player.vy = isKick ? JUMP_FORCE * 0.55 : JUMP_FORCE * 0.35;
+
+        score += 200;
+
+        spawnParticles(e.x + e.w / 2, e.y + e.h / 2, '#ff0040', 10);
+
+        updateUI();
+
+        audioManager.play('stomp');
+
+      }
+
+    });
+
+  }
+
+
+
   const isRunning = isKeyDown('ShiftLeft') || isKeyDown('ShiftRight') || isKeyDown('KeyX');
 
   const maxSpeed = isRunning ? RUN_SPEED : SPEED;
@@ -2184,6 +2294,30 @@ function updateEnemies() {
     // Colisión con jugador
 
     if (rectIntersect(player, e) && player.invincible <= 0) {
+
+      // Si está atacando, el enemigo muere y el jugador no
+
+      if (player.attacking) {
+
+        if (!e.dead) {
+
+          e.dead = true;
+
+          player.vy = JUMP_FORCE * 0.35;
+
+          score += 200;
+
+          spawnParticles(e.x + e.w / 2, e.y + e.h / 2, '#ff0040', 12);
+
+          updateUI();
+
+          audioManager.play('stomp');
+
+        }
+
+        return;
+
+      }
 
       const stompFromAbove = player.vy > 0 && player.y + player.h < e.y + e.h / 2 + 8;
 
