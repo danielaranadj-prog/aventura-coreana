@@ -1,6 +1,5 @@
 // ============================================================
 // CONFIGURACIÓN DE SPRITES TOMY — CON CUADRÍCULA (GRID)
-// Solo se usan dos hojas: celebrate (quieto/celebración) y run (movimiento/salto).
 // ============================================================
 const SPRITE_CONFIG = {
   files: {
@@ -14,7 +13,6 @@ const SPRITE_CONFIG = {
       frameHeight: 660,
       scale: 0.10,
       offsetX: -32,
-      // Ancla los pies en la base del collider del jugador.
       offsetY: -66,
     },
     celebrate: {
@@ -27,13 +25,11 @@ const SPRITE_CONFIG = {
       frameHeight: 717,
       scale: 0.09,
       offsetX: -24,
-      // El frame 1 (quieto) mide ~129 px tras aplicar la escala.
       offsetY: -64.5,
     },
     ready: {
       src: 'assets/TOMY-ready.png',
       frames: 36,
-      // Avanza a 30 fps: la postura lista se percibe como animación continua.
       speed: 2,
       cols: 6,
       rows: 6,
@@ -205,7 +201,7 @@ class Animator {
     const col = this.currentFrame % cols;
     const row = Math.floor(this.currentFrame / cols);
 
-    // Anti-bleeding: recortamos 0.5px por lado para no tomar píxeles del frame vecino
+    // Anti-bleeding: recortamos 0.5px por lado
     const bleed = 0.5;
     const sx = col * fw + bleed;
     const sy = row * fh + bleed;
@@ -223,7 +219,6 @@ class Animator {
       ctx.translate(-dw, 0);
     }
 
-    // Desactivar suavizado para evitar interpolación entre frames
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(img, sx, sy, sfw, sfh, 0, 0, dw, dh);
     ctx.imageSmoothingEnabled = true;
@@ -271,12 +266,19 @@ function generateLevel() {
 let levelMap = generateLevel();
 
 // ============================================================
-// JUGADOR
+// JUGADOR — POSICIÓN INICIAL EN EL SUELO
 // ============================================================
+const GROUND_Y = (LEVEL_HEIGHT - 2) * TILE;
 const player = {
-  x: 64, y: 320, w: 28, h: 48,
-  vx: 0, vy: 0, onGround: false,
-  facing: 1, invincible: 0,
+  x: 64,
+  y: GROUND_Y - 48,
+  w: 28,
+  h: 48,
+  vx: 0,
+  vy: 0,
+  onGround: true,
+  facing: 1,
+  invincible: 0,
   celebrating: false,
   celebrateTimer: 0,
 };
@@ -336,7 +338,7 @@ function spawnParticles(x,y,color,count=8) {
 }
 
 // ============================================================
-// INPUT
+// INPUT — TECLADO + TÁCTIL MEJORADO
 // ============================================================
 const keys={};
 window.addEventListener('keydown',e=>{
@@ -349,10 +351,16 @@ window.addEventListener('keyup',e=>{keys[e.code]=false;});
 const touchKeys={};
 function setupTouch(btnId,keyCode){
   const btn=document.getElementById(btnId);
-  btn.addEventListener('touchstart',e=>{e.preventDefault();touchKeys[keyCode]=true;});
-  btn.addEventListener('touchend',e=>{e.preventDefault();touchKeys[keyCode]=false;});
-  btn.addEventListener('mousedown',e=>{touchKeys[keyCode]=true;});
-  btn.addEventListener('mouseup',e=>{touchKeys[keyCode]=false;});
+  if(!btn) return;
+
+  const setKey = (val) => { touchKeys[keyCode] = val; };
+
+  btn.addEventListener('touchstart',e=>{e.preventDefault();setKey(true);}, {passive:false});
+  btn.addEventListener('touchend',e=>{e.preventDefault();setKey(false);}, {passive:false});
+  btn.addEventListener('touchcancel',e=>{e.preventDefault();setKey(false);}, {passive:false});
+  btn.addEventListener('mousedown',e=>{e.preventDefault();setKey(true);});
+  btn.addEventListener('mouseup',e=>{e.preventDefault();setKey(false);});
+  btn.addEventListener('mouseleave',e=>{e.preventDefault();setKey(false);});
 }
 setupTouch('btn-left','ArrowLeft');
 setupTouch('btn-right','ArrowRight');
@@ -364,7 +372,7 @@ function isKeyDown(code){return keys[code]||touchKeys[code];}
 // SELECTOR DE PERSONAJE
 // ============================================================
 function selectCharacter(name) {
-  if (name !== 'tomy') return; // El segundo espacio queda preparado para otro personaje.
+  if (name !== 'tomy') return;
   selectedCharacter = name;
   const tomyCard = document.getElementById('character-tomy');
   tomyCard.classList.add('selected');
@@ -496,15 +504,17 @@ function updatePlayer(){
   if(player.invincible>0)player.invincible--;
 
   // === LÓGICA DE ANIMACIÓN ===
-  const movingWithKeyboard =
-    isKeyDown('ArrowLeft') || isKeyDown('KeyA') ||
-    isKeyDown('ArrowRight') || isKeyDown('KeyD');
+  // ready = parado en el suelo
+  // run = corriendo o en el aire
+  // celebrate = victoria
+  const moving = Math.abs(player.vx) > 0.5;
+  const hasHorizontalInput = isKeyDown('ArrowLeft') || isKeyDown('KeyA') ||
+                              isKeyDown('ArrowRight') || isKeyDown('KeyD');
 
-  if (!player.onGround || movingWithKeyboard) {
-    animator.setAnimation('run');
-  } else {
-    // Se mantiene en loop mientras el jugador está quieto.
+  if (player.onGround && !moving && !hasHorizontalInput) {
     animator.setAnimation('ready');
+  } else {
+    animator.setAnimation('run');
   }
   animator.update();
 }
@@ -614,7 +624,6 @@ function draw(){
     const bobY=Math.sin(c.bob)*4;
     const prispas = spriteLoader.get('prispas');
     if (prispas) {
-      // Conserva el tamaño del coleccionable, respetando la proporción de la bolsa.
       ctx.drawImage(prispas.image, c.x - 1, c.y - 7 + bobY, 18, 28);
     }
   });
@@ -692,7 +701,9 @@ function startGame(){
   document.getElementById('win-screen').classList.add('hidden');
   document.getElementById('menu-button').classList.remove('hidden');
   score=0;lives=3;timeLeft=300;cameraX=0;
-  player.x=64;player.y=320;player.vx=0;player.vy=0;player.invincible=0;
+  // Posición inicial en el suelo
+  player.x=64;player.y=GROUND_Y-player.h;player.vx=0;player.vy=0;player.invincible=0;
+  player.onGround=true;
   player.celebrating=false;player.celebrateTimer=0;
   levelMap=generateLevel();enemies=createEnemies();coins=createCoins();particles=[];
   gameState='playing';updateUI();startTimer();gameLoop();
