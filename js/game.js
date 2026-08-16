@@ -190,6 +190,29 @@ class AudioManager {
       osc.stop(now + 1.2);
     });
   }
+
+  playOneUp() {
+    if (!this.audioCtx) this.init();
+    if (!this.audioCtx) return;
+    this.resumeContext();
+    const now = this.audioCtx.currentTime;
+    const notes = [
+      { f: 987.77, t: 0.0, d: 0.12 },
+      { f: 1318.51, t: 0.12, d: 0.4 },
+    ];
+    notes.forEach(n => {
+      const osc = this.audioCtx.createOscillator();
+      const gain = this.audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(n.f, now + n.t);
+      gain.gain.setValueAtTime(0.12, now + n.t);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + n.t + n.d);
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start(now + n.t);
+      osc.stop(now + n.t + n.d);
+    });
+  }
 }
 
 const audioManager = new AudioManager(AUDIO_CONFIG);
@@ -216,6 +239,7 @@ let timeLeft = 300;
 let cameraX = 0;
 let timerInterval = null;
 let selectedCharacter = 'tomy';
+let prispasCollected = 0;
 let menuPreviewFrame = 0;
 let menuPreviewTimer = 0;
 let aranaPreviewFrame = 0;
@@ -796,6 +820,17 @@ function updateCoins() {
       c.collected = true;
       score += 50;
       spawnParticles(c.x + 8, c.y + 8, '#ffd700', 6);
+
+      if (c.type === 'prispas') {
+        prispasCollected++;
+        if (prispasCollected >= 3) {
+          prispasCollected = 0;
+          lives++;
+          audioManager.playOneUp();
+          spawnParticles(c.x + 8, c.y + 8, '#00ff88', 20);
+        }
+      }
+
       updateUI();
     }
   });
@@ -1032,7 +1067,7 @@ function startGame() {
   document.getElementById('win-screen').classList.add('hidden');
   document.getElementById('menu-button').classList.remove('hidden');
   document.getElementById('mobile-controls').style.display = 'flex';
-  score = 0; lives = 3; timeLeft = 300; cameraX = 0;
+  score = 0; lives = 3; timeLeft = 300; cameraX = 0; prispasCollected = 0;
   player.x = 64; player.y = GROUND_Y - player.h; player.vx = 0; player.vy = 0; player.invincible = 0;
   player.onGround = true;
   player.celebrating = false; player.celebrateTimer = 0;

@@ -81,13 +81,13 @@
   /* ===== CONTROLES MÓVILES ESTILO SNES ===== */
   #mobile-controls {
     display: none;
-    position: absolute;
+    position: fixed;
     bottom: 0;
     left: 0; right: 0;
     justify-content: space-between;
     align-items: flex-end;
-    padding: 14px 18px 32px;
-    z-index: 30;
+    padding: 14px 18px calc(24px + env(safe-area-inset-bottom));
+    z-index: 999;
     pointer-events: none;
   }
 
@@ -96,43 +96,44 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2px;
+    gap: 3px;
     pointer-events: auto;
   }
   .dpad-row {
     display: flex;
     align-items: center;
-    gap: 2px;
+    gap: 3px;
   }
   .dpad-btn {
-    width: 46px;
-    height: 46px;
+    width: 56px;
+    height: 56px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 255, 255, 0.04);
-    border: 1px solid rgba(0, 255, 255, 0.18);
-    color: rgba(0, 255, 255, 0.45);
-    font-size: 13px;
-    border-radius: 8px;
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
+    background: rgba(0, 255, 255, 0.12);
+    border: 1.5px solid rgba(0, 255, 255, 0.35);
+    color: rgba(0, 255, 255, 0.8);
+    font-size: 18px;
+    border-radius: 10px;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     touch-action: manipulation;
     user-select: none;
     -webkit-user-select: none;
     pointer-events: auto;
     transition: background 0.08s, transform 0.08s;
+    text-shadow: 0 0 8px rgba(0,255,255,0.4);
   }
   .dpad-btn:active {
-    background: rgba(0, 255, 255, 0.18);
-    transform: scale(0.92);
+    background: rgba(0, 255, 255, 0.35);
+    transform: scale(0.9);
   }
   .dpad-center {
-    width: 46px;
-    height: 46px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
-    background: rgba(0, 255, 255, 0.06);
-    border: 1px solid rgba(0, 255, 255, 0.1);
+    background: rgba(0, 255, 255, 0.08);
+    border: 1.5px solid rgba(0, 255, 255, 0.2);
   }
 
   /* Botones SNES */
@@ -140,46 +141,47 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     pointer-events: auto;
   }
   .snes-row {
     display: flex;
-    gap: 16px;
+    gap: 18px;
     align-items: center;
   }
   .snes-btn {
-    width: 54px;
-    height: 54px;
+    width: 62px;
+    height: 62px;
     border-radius: 50%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 0, 255, 0.05);
-    border: 1.5px solid rgba(255, 0, 255, 0.2);
-    color: rgba(255, 255, 255, 0.55);
-    font-size: 15px;
+    background: rgba(255, 0, 255, 0.12);
+    border: 2px solid rgba(255, 0, 255, 0.4);
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 18px;
     font-weight: 800;
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     touch-action: manipulation;
     user-select: none;
     -webkit-user-select: none;
     pointer-events: auto;
     transition: background 0.08s, transform 0.08s, box-shadow 0.15s;
-    box-shadow: 0 0 12px rgba(255, 0, 255, 0.06);
+    box-shadow: 0 0 15px rgba(255, 0, 255, 0.15);
+    text-shadow: 0 0 8px rgba(255,255,255,0.3);
   }
   .snes-btn:active {
-    background: rgba(255, 0, 255, 0.2);
-    transform: scale(0.92);
-    box-shadow: 0 0 22px rgba(255, 0, 255, 0.25);
+    background: rgba(255, 0, 255, 0.35);
+    transform: scale(0.9);
+    box-shadow: 0 0 28px rgba(255, 0, 255, 0.4);
   }
   .snes-label {
-    font-size: 8px;
-    color: rgba(255, 255, 255, 0.3);
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.5);
     text-align: center;
-    margin-top: 1px;
+    margin-top: 2px;
     letter-spacing: 1px;
     text-transform: uppercase;
   }
@@ -376,16 +378,16 @@
 
   /* ===== RESPONSIVE ===== */
   @media (max-height: 700px) {
-    .dpad-btn { width: 40px; height: 40px; font-size: 11px; }
-    .dpad-center { width: 40px; height: 40px; }
-    .snes-btn { width: 48px; height: 48px; font-size: 13px; }
-    #mobile-controls { padding: 10px 14px 22px; }
+    .dpad-btn { width: 48px; height: 48px; font-size: 15px; }
+    .dpad-center { width: 48px; height: 48px; }
+    .snes-btn { width: 54px; height: 54px; font-size: 16px; }
+    #mobile-controls { padding: 10px 14px calc(18px + env(safe-area-inset-bottom)); }
   }
   @media (max-height: 600px) {
-    .dpad-btn { width: 36px; height: 36px; font-size: 10px; }
-    .dpad-center { width: 36px; height: 36px; }
-    .snes-btn { width: 44px; height: 44px; font-size: 12px; }
-    #mobile-controls { padding: 8px 12px 18px; }
+    .dpad-btn { width: 42px; height: 42px; font-size: 14px; }
+    .dpad-center { width: 42px; height: 42px; }
+    .snes-btn { width: 48px; height: 48px; font-size: 14px; }
+    #mobile-controls { padding: 8px 12px calc(14px + env(safe-area-inset-bottom)); }
     #start-screen h1 { font-size: 26px; }
     .screen-title { font-size: 24px; }
   }
