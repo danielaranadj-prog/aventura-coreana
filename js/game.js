@@ -509,14 +509,14 @@ function generateLevel() {
   }
 
   // Plataformas rediseñadas — más bajas y accesibles
-  plat(3, 14, 4);   plat(10, 13, 3);  plat(16, 12, 2, 3); plat(22, 13, 3);
-  plat(28, 11, 4);  plat(35, 12, 2, 3); plat(40, 11, 3);  plat(46, 13, 2);
-  plat(50, 10, 4);  plat(57, 12, 2, 3); plat(62, 10, 3);  plat(68, 12, 2);
-  plat(72, 9, 4);   plat(78, 11, 2, 3); plat(83, 10, 3);  plat(88, 12, 2);
-  plat(92, 8, 4);   plat(98, 11, 2, 3); plat(103, 9, 3);  plat(108, 11, 2);
+  plat(3, 14, 4);   plat(10, 13, 3);  plat(16, 11, 2, 3); plat(22, 13, 3);
+  plat(28, 11, 4);  plat(35, 11, 2, 3); plat(40, 11, 3);  plat(46, 13, 2);
+  plat(50, 10, 4);  plat(57, 11, 2, 3); plat(62, 10, 3);  plat(68, 12, 2);
+  plat(72, 9, 4);   plat(78, 10, 2, 3); plat(83, 10, 3);  plat(88, 12, 2);
+  plat(92, 8, 4);   plat(98, 10, 2, 3); plat(103, 9, 3);  plat(108, 11, 2);
   plat(112, 8, 4);  plat(5, 11, 3);    plat(12, 10, 2);  plat(18, 9, 3);
-  plat(25, 10, 2);  plat(32, 8, 4);   plat(38, 9, 2, 3); plat(44, 7, 3);
-  plat(52, 9, 2);   plat(58, 6, 4);   plat(64, 8, 2, 3); plat(70, 6, 3);
+  plat(25, 10, 2);  plat(32, 8, 4);   plat(38, 8, 2, 3); plat(44, 7, 3);
+  plat(52, 9, 2);   plat(58, 6, 4);   plat(64, 7, 2, 3); plat(70, 6, 3);
 
   // Escaleras de rescate — si caes al suelo puedes volver a subir
   plat(55, 16, 3);  plat(58, 15, 2);  plat(60, 14, 2);
@@ -1036,7 +1036,7 @@ function draw() {
     if (c.type === 'prispas') {
       const prispas = spriteLoader.get('prispas');
       if (prispas) {
-        ctx.drawImage(prispas.image, c.x - 1, c.y - 7 + bobY, 18, 28);
+        ctx.drawImage(prispas.image, c.x - 1, c.y + 2 + bobY, 18, 28);
       }
     } else {
       const item = spriteLoader.get('item');
