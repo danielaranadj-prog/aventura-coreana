@@ -2055,11 +2055,15 @@ function updatePlayer() {
 
                    isKeyDown('ArrowRight') || isKeyDown('KeyD');
 
-  const isMoving = Math.abs(player.vx) > 0.15;
+  // Ajustamos el umbral para que sea más preciso al detenerse
+  const isMoving = Math.abs(player.vx) > 0.1;
 
 
 
   if (player.onGround && !hasInput && !isMoving) {
+
+    // Forzamos la velocidad a 0 para eliminar el micro-movimiento residual
+    player.vx = 0;
 
     animator.setStaticFrame('ready', 0);
 
@@ -2067,9 +2071,7 @@ function updatePlayer() {
 
     animator.setAnimation('run', 0);
 
-  }
-
-  animator.update();
+    animator.update();
 
 }
 
