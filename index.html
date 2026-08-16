@@ -78,11 +78,9 @@
   }
   #menu-button:active { background: #4a1a6b; }
 
-  /* ===== CONTROLES MÓVILES ESTILO ARCADE ===== */
-
-  /* Modo móvil: reserva espacio inferior para controles */
+  /* ===== CONTROLES MÓVILES ESTILO ARCADE / NES ===== */
   #game-wrapper.mobile-mode {
-    padding-bottom: 170px;
+    padding-bottom: 150px;
   }
   #game-wrapper.mobile-mode canvas {
     flex: 1;
@@ -92,9 +90,10 @@
     position: absolute;
     bottom: 0;
     left: 0; right: 0;
+    display: flex;
     justify-content: space-between;
-    align-items: flex-end;
-    padding: 10px 16px calc(14px + env(safe-area-inset-bottom));
+    align-items: center;
+    padding: 8px 16px calc(10px + env(safe-area-inset-bottom));
     z-index: 999;
     pointer-events: none;
   }
@@ -104,17 +103,17 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
     pointer-events: auto;
   }
   .dpad-row {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
   }
   .dpad-btn {
-    width: 54px;
-    height: 54px;
+    width: 50px;
+    height: 50px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -127,7 +126,6 @@
     pointer-events: auto;
     transition: transform 0.06s, box-shadow 0.1s;
     position: relative;
-    /* Botón arcade azul/cian con relieve 3D */
     background: radial-gradient(circle at 35% 35%, #4dd0e1 0%, #00bcd4 40%, #00838f 100%);
     box-shadow:
       inset 0 2px 4px rgba(255,255,255,0.4),
@@ -135,7 +133,7 @@
       0 4px 8px rgba(0,188,212,0.35),
       0 0 15px rgba(0,188,212,0.2);
     color: #fff;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 900;
     text-shadow: 0 1px 2px rgba(0,0,0,0.4);
   }
@@ -158,8 +156,8 @@
       0 1px 3px rgba(0,188,212,0.3);
   }
   .dpad-center {
-    width: 54px;
-    height: 54px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     background: radial-gradient(circle at 35% 35%, #37474f 0%, #263238 60%, #102027 100%);
     box-shadow:
@@ -179,22 +177,19 @@
     background: radial-gradient(ellipse at center, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%);
   }
 
-  /* ===== BOTONES ARCADE A / B ===== */
+  /* ===== BOTONES EN DIAGONAL ESTILO NES (A y B) ===== */
   .snes-buttons {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
     pointer-events: auto;
-  }
-  .snes-row {
-    display: flex;
-    gap: 16px;
-    align-items: center;
+    position: relative;
+    padding-top: 16px; /* Desplaza el botón A ligeramente hacia arriba en diagonal */
+    margin-right: 6px;
   }
   .snes-btn {
-    width: 64px;
-    height: 64px;
+    width: 68px;
+    height: 68px;
     border-radius: 50%;
     display: flex;
     flex-direction: column;
@@ -227,32 +222,16 @@
     transform: scale(0.92) translateY(2px);
   }
 
-  /* Botón A (Saltar) — Rojo arcade */
-  #btn-jump {
-    background: radial-gradient(circle at 35% 35%, #ff5252 0%, #f44336 40%, #b71c1c 100%);
-    box-shadow:
-      inset 0 2px 4px rgba(255,255,255,0.4),
-      inset 0 -3px 6px rgba(0,0,0,0.3),
-      0 5px 10px rgba(244,67,54,0.4),
-      0 0 18px rgba(244,67,54,0.25);
-    color: #fff;
-  }
-  #btn-jump:active {
-    box-shadow:
-      inset 0 2px 6px rgba(0,0,0,0.4),
-      inset 0 -1px 2px rgba(255,255,255,0.2),
-      0 1px 3px rgba(244,67,54,0.3);
-  }
-
-  /* Botón B (Correr) — Verde arcade */
+  /* Botón B (Correr) — Izquierda / Abajo en la diagonal NES */
   #btn-run {
     background: radial-gradient(circle at 35% 35%, #69f0ae 0%, #4caf50 40%, #1b5e20 100%);
     box-shadow:
-      inset 0 2px 4px rgba(255,255,255,0.4),
-      inset 0 -3px 6px rgba(0,0,0,0.3),
-      0 5px 10px rgba(76,175,80,0.4),
-      0 0 18px rgba(76,175,80,0.25);
+      inset 0 2px 5px rgba(255,255,255,0.4),
+      inset 0 -4px 8px rgba(0,0,0,0.35),
+      0 6px 12px rgba(76,175,80,0.45),
+      0 0 20px rgba(76,175,80,0.3);
     color: #fff;
+    margin-top: 16px; /* Desplaza B hacia abajo creando la diagonal clásica */
   }
   #btn-run:active {
     box-shadow:
@@ -261,12 +240,30 @@
       0 1px 3px rgba(76,175,80,0.3);
   }
 
+  /* Botón A (Saltar) — Derecha / Arriba en la diagonal NES */
+  #btn-jump {
+    background: radial-gradient(circle at 35% 35%, #ff5252 0%, #f44336 40%, #b71c1c 100%);
+    box-shadow:
+      inset 0 2px 5px rgba(255,255,255,0.4),
+      inset 0 -4px 8px rgba(0,0,0,0.35),
+      0 6px 12px rgba(244,67,54,0.45),
+      0 0 20px rgba(244,67,54,0.3);
+    color: #fff;
+    margin-bottom: 16px; /* Desplaza A hacia arriba creando la diagonal clásica */
+  }
+  #btn-jump:active {
+    box-shadow:
+      inset 0 2px 6px rgba(0,0,0,0.4),
+      inset 0 -1px 2px rgba(255,255,255,0.2),
+      0 1px 3px rgba(244,67,54,0.3);
+  }
+
   .snes-label {
     font-size: 9px;
-    color: rgba(255, 255, 255, 0.65);
+    color: rgba(255, 255, 255, 0.75);
     text-align: center;
-    margin-top: 3px;
-    letter-spacing: 1.5px;
+    margin-top: 1px;
+    letter-spacing: 1px;
     text-transform: uppercase;
     text-shadow: 0 1px 2px rgba(0,0,0,0.5);
   }
@@ -336,16 +333,6 @@
   }
   .character-name { display: block; font-weight: 800; font-size: 14px; }
   .character-status { display: block; margin-top: 2px; color: #ff69b4; font-size: 11px; }
-  .future-avatar {
-    display: grid;
-    place-items: center;
-    height: 150px;
-    margin-bottom: 4px;
-    border-radius: 8px;
-    background: rgba(255,0,255,.06);
-    color: #ff69b4;
-    font-size: 40px;
-  }
   .btn {
     padding: 12px 32px;
     font-size: 16px;
@@ -385,7 +372,6 @@
   }
   .hidden { display: none !important; }
 
-  /* ===== PANTALLA DE CARGA ===== */
   /* ===== PANTALLA DE CARGA / PORTADA ===== */
   #loading {
     position: absolute;
@@ -393,7 +379,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: center;
     background: #0d0221;
     z-index: 50;
     overflow: hidden;
@@ -403,8 +389,8 @@
     inset: 0;
     width: 100%;
     height: 100%;
-    object-fit: contain;
-    object-position: center top;
+    object-fit: cover;
+    object-position: center;
     opacity: 1;
     image-rendering: auto;
     -webkit-image-rendering: auto;
@@ -412,13 +398,7 @@
   .loading-darken {
     position: absolute;
     inset: 0;
-    background: linear-gradient(
-      to bottom,
-      rgba(13,2,33,0.10) 0%,
-      rgba(13,2,33,0.20) 50%,
-      rgba(13,2,33,0.85) 85%,
-      rgba(13,2,33,0.98) 100%
-    );
+    background: rgba(13, 2, 33, 0.7);
     z-index: 1;
   }
   .loading-overlay {
@@ -427,6 +407,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
+    text-align: center;
     gap: 14px;
     padding: 28px 24px calc(28px + env(safe-area-inset-bottom));
     width: 100%;
@@ -509,18 +491,10 @@
 
   /* ===== RESPONSIVE ===== */
   @media (max-height: 700px) {
-    .dpad-btn { width: 48px; height: 48px; font-size: 15px; }
-    .dpad-center { width: 48px; height: 48px; }
-    .snes-btn { width: 54px; height: 54px; font-size: 16px; }
-    #mobile-controls { padding: 10px 14px calc(18px + env(safe-area-inset-bottom)); }
-  }
-  @media (max-height: 600px) {
-    .dpad-btn { width: 42px; height: 42px; font-size: 14px; }
-    .dpad-center { width: 42px; height: 42px; }
-    .snes-btn { width: 48px; height: 48px; font-size: 14px; }
-    #mobile-controls { padding: 8px 12px calc(14px + env(safe-area-inset-bottom)); }
-    #start-screen h1 { font-size: 26px; }
-    .screen-title { font-size: 24px; }
+    .dpad-btn { width: 44px; height: 44px; font-size: 14px; }
+    .dpad-center { width: 44px; height: 44px; }
+    .snes-btn { width: 60px; height: 60px; font-size: 18px; }
+    #mobile-controls { padding: 6px 12px calc(10px + env(safe-area-inset-bottom)); }
   }
   @media (min-width: 500px) {
     #game-wrapper {
@@ -561,15 +535,12 @@
     margin: 2px 0 6px;
   }
 
-
-#win-screen { background: radial-gradient(circle at center, #1f093d 0%, #0d0221 85%); padding: 24px; gap: 12px; }
-.win-title { font-size: 28px; font-weight: 900; color: #ffd700; text-shadow: 0 0 20px rgba(255, 215, 0, 0.6); animation: winPulse 1.5s ease-in-out infinite; }
-.win-character-container { padding: 8px; background: linear-gradient(135deg, rgba(255, 0, 255, 0.15), rgba(0, 255, 255, 0.15)); border: 2px solid rgba(255, 215, 0, 0.5); border-radius: 16px; display: flex; align-items: center; justify-content: center; }
-#win-character-preview { width: 110px; height: 150px; object-fit: contain; image-rendering: pixelated; }
-.win-score-box { background: rgba(26, 10, 46, 0.8); border-radius: 10px; padding: 8px 24px; display: flex; flex-direction: column; align-items: center; }
-.win-score-box strong { font-size: 22px; color: #00ffff; }
-.btn-secondary-menu { background: rgba(45, 27, 78, 0.9); border: 1px solid rgba(255, 105, 180, 0.5); color: #ff69b4; padding: 10px; border-radius: 10px; cursor: pointer; }
-
+  #win-screen { background: radial-gradient(circle at center, #1f093d 0%, #0d0221 85%); padding: 24px; gap: 12px; }
+  .win-character-container { padding: 8px; background: linear-gradient(135deg, rgba(255, 0, 255, 0.15), rgba(0, 255, 255, 0.15)); border: 2px solid rgba(255, 215, 0, 0.5); border-radius: 16px; display: flex; align-items: center; justify-content: center; }
+  #win-character-preview { width: 110px; height: 150px; object-fit: contain; image-rendering: pixelated; }
+  .win-score-box { background: rgba(26, 10, 46, 0.8); border-radius: 10px; padding: 8px 24px; display: flex; flex-direction: column; align-items: center; }
+  .win-score-box strong { font-size: 22px; color: #00ffff; }
+  .btn-secondary-menu { background: rgba(45, 27, 78, 0.9); border: 1px solid rgba(255, 105, 180, 0.5); color: #ff69b4; padding: 10px; border-radius: 10px; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -626,22 +597,22 @@
   </div>
 
   <div id="win-screen" class="hidden">
-  <div class="win-title">¡VICTORIA ÉPICA!</div>
-  <div class="win-stars">★ ★ ★ ★ ★</div>
-  <div class="win-character-container">
-    <canvas id="win-character-preview" width="140" height="180" aria-label="Personaje celebrando"></canvas>
+    <div class="win-title">¡VICTORIA ÉPICA!</div>
+    <div class="win-stars">★ ★ ★ ★ ★</div>
+    <div class="win-character-container">
+      <canvas id="win-character-preview" width="140" height="180" aria-label="Personaje celebrando"></canvas>
+    </div>
+    <div class="win-score-box">
+      <span>Puntuación Final</span>
+      <strong id="win-score">0</strong>
+    </div>
+    <div class="win-buttons">
+      <button class="btn btn-green" onclick="restartGame()">↻ Jugar de nuevo</button>
+      <button class="btn btn-secondary-menu" onclick="returnToMenu()">☰ Menú Principal</button>
+    </div>
   </div>
-  <div class="win-score-box">
-    <span>Puntuación Final</span>
-    <strong id="win-score">0</strong>
-  </div>
-  <div class="win-buttons">
-    <button class="btn btn-green" onclick="restartGame()">↻ Jugar de nuevo</button>
-    <button class="btn btn-secondary-menu" onclick="returnToMenu()">☰ Menú Principal</button>
-  </div>
-</div>
 
-  <!-- CONTROLES MÓVILES ESTILO SNES -->
+  <!-- CONTROLES MÓVILES ESTILO NES (DIAGONAL A/B) -->
   <div id="mobile-controls" class="hidden">
     <div class="dpad">
       <div class="dpad-btn dpad-up" id="btn-up">▲</div>
@@ -652,20 +623,17 @@
       </div>
       <div class="dpad-btn dpad-down" id="btn-down">▼</div>
     </div>
-    <div class="snes-buttons">
-      <div class="snes-row">
-        <div class="snes-btn" id="btn-jump">
-          A
-          <span class="snes-label">Saltar</span>
-        </div>
-        <div class="snes-btn" id="btn-run">
-          B
-          <span class="snes-label">Correr</span>
-        </div>
+    <div class="snes-buttons" style="gap: 18px;"> <!-- Espacio ajustado entre B y A -->
+      <div class="snes-btn" id="btn-run" style="margin-right: 4px;"> <!-- Botón verde movido ligeramente a la izquierda -->
+        B
+        <span class="snes-label">Correr</span>
+      </div>
+      <div class="snes-btn" id="btn-jump">
+        A
+        <span class="snes-label">Saltar</span>
       </div>
     </div>
   </div>
-</div>
 
 <script src="js/game.js"></script>
 </body>
