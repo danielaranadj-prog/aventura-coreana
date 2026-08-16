@@ -546,12 +546,12 @@ function generateLevel() {
 
   // Plataformas azules (tile=2) subidas 3-4 tiles sobre suelo (y entre 14 y 11)
   // NUNCA tocando el suelo (y=18-19)
-  plat(3, 14, 4);   plat(12, 14, 3);  plat(16, 18, 2, 3); plat(22, 13, 3);
+  plat(3, 14, 4);   plat(10, 13, 3);  plat(16, 11, 2, 3); plat(22, 13, 3);
   plat(28, 11, 4);  plat(35, 11, 2, 3); plat(40, 11, 3);  plat(46, 13, 2);
   plat(50, 10, 4);  plat(57, 11, 2, 3); plat(62, 10, 3);  plat(68, 12, 2);
   plat(72, 9, 4);   plat(78, 10, 2, 3); plat(83, 10, 3);  plat(88, 12, 2);
   plat(92, 8, 4);   plat(98, 10, 2, 3); plat(103, 9, 3);  plat(108, 11, 2);
-  plat(112, 8, 4);  plat(5, 14, 3);    plat(12, 10, 2);  plat(18, 9, 3);
+  plat(112, 8, 4);  plat(5, 11, 3);    plat(12, 10, 2);  plat(18, 9, 3);
   plat(25, 10, 2);  plat(32, 8, 4);   plat(38, 8, 2, 3); plat(44, 7, 3);
   plat(52, 9, 2);   plat(58, 6, 4);   plat(64, 7, 2, 3); plat(70, 6, 3);
 
@@ -586,6 +586,8 @@ const player = {
   invincible: 0,
   celebrating: false,
   celebrateTimer: 0,
+  fallingDeath: false,
+  fallingDeathTimer: 0,
 };
 
 // ============================================================
@@ -693,13 +695,13 @@ let enemies = [];
 function createCoins() {
   const coins = [];
   const pos = [
-    [4,13],[5,13],[6,13],[11,12],[12,12],[17,11],[18,11],[29,10],[30,10],[31,10],
-    [36,11],[37,11],[41,10],[42,10],[51,9],[52,9],[53,9],[58,11],[59,11],
-    [63,9],[64,9],[69,11],[73,8],[74,8],[75,8],[79,10],[80,10],[84,9],[85,9],
-    [89,11],[93,7],[94,7],[95,7],[99,10],[100,10],[104,8],[105,8],[109,10],
-    [113,7],[114,7],[115,7],[6,10],[7,10],[13,9],[19,8],[26,9],[27,9],
-    [33,7],[34,7],[39,8],[40,8],[45,6],[46,6],[47,6],[53,8],[54,8],
-    [59,5],[60,5],[65,7],[66,7],[71,5],[72,5],
+    [4,15],[5,15],[6,15],[11,14],[12,14],[17,13],[18,13],[29,12],[30,12],[31,12],
+    [36,13],[37,13],[41,12],[42,12],[51,11],[52,11],[53,11],[58,13],[59,13],
+    [63,11],[64,11],[69,13],[73,10],[74,10],[75,10],[79,12],[80,12],[84,11],[85,11],
+    [89,13],[93,9],[94,9],[95,9],[99,12],[100,12],[104,10],[105,10],[109,12],
+    [113,9],[114,9],[115,9],[6,12],[7,12],[13,11],[19,10],[26,11],[27,11],
+    [33,9],[34,9],[39,10],[40,10],[45,8],[46,8],[47,8],[53,10],[54,10],
+    [59,7],[60,7],[65,9],[66,9],[71,7],[72,7],
   ];
 
   // Solo 3 prispas en índices [6, 20, 40]
@@ -901,6 +903,25 @@ function isSolid(tile) { return tile === 1 || tile === 2 || tile === 3 || tile =
 function rectIntersect(a, b) { return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y; }
 
 function updatePlayer() {
+  // Animación de muerte por caída en hueco
+  if (player.fallingDeath) {
+    player.vy += GRAVITY * 1.5;
+    player.y += player.vy;
+    player.fallingDeathTimer++;
+    animator.setAnimation('run');
+    animator.update();
+    // Respawn cuando sale de pantalla o pasa suficiente tiempo
+    if (player.y > canvas.height + 200 || player.fallingDeathTimer > 90) {
+      player.fallingDeath = false;
+      player.fallingDeathTimer = 0;
+      player.invincible = 120;
+      player.vy = 0;
+      player.x = 64; // respawn seguro al inicio
+      player.y = GROUND_Y - player.h;
+    }
+    return;
+  }
+
   if (player.celebrating) {
     player.celebrateTimer--;
     if (player.celebrateTimer <= 0) player.celebrating = false;
@@ -956,9 +977,18 @@ function updatePlayer() {
     }
   }
 
-  // Muerte por caer en hueco
-  if (player.y > LEVEL_HEIGHT * TILE + 50) {
-    playerDie(true); // true = death by falling (gap)
+  // Muerte por caer en hueco - iniciar animación de caída
+  if (player.y > LEVEL_HEIGHT * TILE + 50 && !player.fallingDeath) {
+    player.fallingDeath = true;
+    player.fallingDeathTimer = 0;
+    lives--;
+    updateUI();
+    audioManager.play('death');
+    spawnParticles(player.x + player.w / 2, player.y + player.h / 2, '#ff0040', 20);
+    if (lives <= 0) {
+      gameOver();
+      return;
+    }
     return;
   }
 
