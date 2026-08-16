@@ -509,8 +509,8 @@ function generateLevel() {
   }
 
   // Plataformas rediseñadas — más bajas y accesibles
-  plat(3, 14, 4);   plat(10, 13, 3);  plat(16, 14, 2, 3); plat(22, 13, 3);
-  plat(28, 11, 4);  plat(35, 14, 2, 3); plat(40, 11, 3);  plat(46, 13, 2);
+  plat(3, 14, 4);   plat(10, 13, 3);  plat(16, 11, 2, 3); plat(22, 13, 3);
+  plat(28, 11, 4);  plat(35, 11, 2, 3); plat(40, 11, 3);  plat(46, 13, 2);
   plat(50, 10, 4);  plat(57, 11, 2, 3); plat(62, 10, 3);  plat(68, 12, 2);
   plat(72, 9, 4);   plat(78, 10, 2, 3); plat(83, 10, 3);  plat(88, 12, 2);
   plat(92, 8, 4);   plat(98, 10, 2, 3); plat(103, 9, 3);  plat(108, 11, 2);
@@ -732,14 +732,21 @@ function drawWinCharacter() {
   const col = winPreviewFrame % spriteData.cols;
   const row = Math.floor(winPreviewFrame / spriteData.cols);
 
-  // Usar las dimensiones EXACTAS del config (como Animator.draw)
-  // para evitar deformación por padding o tamaño real de imagen
+  // Usar dimensiones del config para evitar deformación
   const fw = spriteData.frameWidth;
   const fh = spriteData.frameHeight;
-  const scale = spriteData.scale || 0.08;
 
-  const dw = fw * scale;
-  const dh = fh * scale;
+  // Calcular scale automático para llenar el canvas manteniendo proporción
+  const maxW = preview.width - 4;   // 86
+  const maxH = preview.height - 4;  // 146
+  const aspect = fw / fh;           // 408 / 717 = 0.569
+
+  let dh = maxH;          // ajustar a altura primero
+  let dw = dh * aspect;   // 146 * 0.569 = 83
+  if (dw > maxW) {        // si no cabe en el ancho
+    dw = maxW;            // 86
+    dh = dw / aspect;     // 86 / 0.569 = 151
+  }
 
   previewCtx.clearRect(0, 0, preview.width, preview.height);
   previewCtx.imageSmoothingEnabled = false;
