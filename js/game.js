@@ -1809,44 +1809,33 @@ function drawWinCharacter() {
   const spriteData = spriteLoader.get(animName);
   if (!preview || !spriteData) return;
 
-  const previewCtx = preview.getContext('2d');
-  const W = preview.width;
-  const H = preview.height;
+  const ctxWin = preview.getContext('2d');
+  const canvasWin = preview;
 
   const col = winPreviewFrame % spriteData.cols;
   const row = Math.floor(winPreviewFrame / spriteData.cols);
 
-  const fw = spriteData.frameWidth;
-  const fh = spriteData.frameHeight;
-  const aspect = fw / fh;
+  const playerImage = spriteData.image;
 
-  // Dibujar suelo de "victoria" en la parte inferior
-  previewCtx.clearRect(0, 0, W, H);
+  ctxWin.clearRect(0, 0, canvasWin.width, canvasWin.height);
+  const aspectRatio = playerImage.width / playerImage.height;
+  let renderWidth = canvasWin.width * 0.8;
+  let renderHeight = renderWidth / aspectRatio;
+  if (renderHeight > canvasWin.height * 0.9) {
+    renderHeight = canvasWin.height * 0.9;
+    renderWidth = renderHeight * aspectRatio;
+  }
+  const renderX = (canvasWin.width - renderWidth) / 2;
+  const renderY = (canvasWin.height - renderHeight) / 2;
 
-  // Suelo brillante
-  const groundY = H - 24;
-  const grad = previewCtx.createLinearGradient(0, groundY, 0, H);
-  grad.addColorStop(0, '#ff00ff');
-  grad.addColorStop(1, '#4a1a6b');
-  previewCtx.fillStyle = grad;
-  previewCtx.fillRect(0, groundY, W, H - groundY);
-  previewCtx.fillStyle = '#ff69b4';
-  previewCtx.fillRect(0, groundY, W, 3);
-
-  // Personaje parado en el suelo
-  const dh = 140; // altura del personaje
-  const dw = dh * aspect;
-  const px = (W - dw) / 2;
-  const py = groundY - dh + 4;
-
-  previewCtx.imageSmoothingEnabled = false;
-  previewCtx.drawImage(
-    spriteData.image,
-    col * fw, row * fh,
-    fw, fh,
-    px, py,
-    dw, dh
+  ctxWin.imageSmoothingEnabled = false;
+  ctxWin.drawImage(
+    playerImage,
+    col * spriteData.frameWidth, row * spriteData.frameHeight,
+    spriteData.frameWidth, spriteData.frameHeight,
+    renderX, renderY, renderWidth, renderHeight
   );
+  ctxWin.imageSmoothingEnabled = true;
 }
 
 
