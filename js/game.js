@@ -1,5 +1,1055 @@
+// ============================================================
+// CONFIGURACIÓN DE SPRITES
+// ============================================================
+const SPRITE_CONFIG = {
+  files: {
+    run: {
+      src: 'assets/TOMY-run.png',
+      frames: 36, speed: 3, cols: 6, rows: 6,
+      frameWidth: 464, frameHeight: 660,
+      scale: 0.09, offsetX: -28, offsetY: -60,
+    },
+    celebrate: {
+      src: 'assets/TOMY-celebrate.png',
+      frames: 36, speed: 3, cols: 6, rows: 6,
+      frameWidth: 408, frameHeight: 717,
+      scale: 0.08, offsetX: -22, offsetY: -58,
+    },
+    ready: {
+      src: 'assets/TOMY-ready.png',
+      frames: 36, speed: 2, cols: 6, rows: 6,
+      frameWidth: 372, frameHeight: 709,
+      scale: 0.08, offsetX: -22, offsetY: -58,
+    },
+    'arana-ready': {
+      src: 'assets/arana-ready.png',
+      frames: 16, speed: 3, cols: 4, rows: 4,
+      frameWidth: 447, frameHeight: 664,
+      scale: 0.085, offsetX: -24, offsetY: -58,
+    },
+    prispas: {
+      src: 'assets/prispas.webp',
+      frames: 1, speed: 1, cols: 1, rows: 1,
+      frameWidth: 637, frameHeight: 1000,
+    },
+    item: {
+      src: 'assets/item.png',
+      frames: 1, speed: 1, cols: 1, rows: 1,
+      frameWidth: 128, frameHeight: 128,
+    },
+  },
+};
 
-game_js = '''// ============================================================
+// ============================================================
+// CONFIGURACIÓN DE AUDIO
+// ============================================================
+const AUDIO_CONFIG = {
+  selectPlayer: { src: 'assets/select-player.mp3', loop: true,  volume: 0.6 },
+  gameStart:    { src: 'assets/game-start.mp3',    loop: false, volume: 0.7 },
+  gameAdventure:{ src: 'assets/game-adventure.mp3', loop: true,  volume: 0.5 },
+  death:        { src: 'assets/death.mp3',         loop: false, volume: 0.8 },
+  fail:         { src: 'assets/fail.mp3',          loop: false, volume: 0.8 },
+  jump:         { src: 'assets/jump.mp3',          loop: false, volume: 0.25 },
+  stomp:        { src: 'assets/stomp.mp3',         loop: false, volume: 0.35 },
+};
+
+// ============================================================
+// SISTEMA DE AUDIO
+// ============================================================
+class AudioManager {
+  constructor(config) {
+    this.config = config;
+    this.sounds = {};
+    this.audioCtx = null;
+    this.masterGain = null;
+    this.initialized = false;
+    this.currentMusic = null;
+  }
+
+  init() {
+    if (this.initialized) return;
+    try {
+      this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      this.masterGain = this.audioCtx.createGain();
+      this.masterGain.gain.value = 1.0;
+      this.masterGain.connect(this.audioCtx.destination);
+      this.initialized = true;
+    } catch (e) {
+      console.warn('Web Audio API no disponible');
+    }
+  }
+
+  loadAll() {
+    const promises = [];
+    for (const [name, info] of Object.entries(this.config)) {
+      const promise = new Promise((resolve) => {
+        const audio = new Audio();
+        audio.src = info.src;
+        audio.loop = info.loop;
+        audio.volume = info.volume;
+        audio.preload = 'auto';
+
+        let resolved = false;
+        const done = () => { if (!resolved) { resolved = true; resolve(); } };
+
+        audio.addEventListener('canplaythrough', done, { once: true });
+        audio.addEventListener('error', () => {
+          console.warn('No se pudo cargar audio:', info.src);
+          done();
+        }, { once: true });
+
+        setTimeout(done, 4000);
+        audio.load();
+        this.sounds[name] = audio;
+      });
+      promises.push(promise);
+    }
+    return Promise.all(promises);
+  }
+
+  resumeContext() {
+    if (this.audioCtx && this.audioCtx.state === 'suspended') {
+      this.audioCtx.resume();
+    }
+  }
+
+  play(name) {
+    this.resumeContext();
+    const sound = this.sounds[name];
+    if (!sound) return;
+    sound.currentTime = 0;
+    const playPromise = sound.play();
+    if (playPromise) playPromise.catch(() => {});
+  }
+
+  stop(name) {
+    const sound = this.sounds[name];
+    if (!sound) return;
+    sound.pause();
+    sound.currentTime = 0;
+  }
+
+  pause(name) {
+    const sound = this.sounds[name];
+    if (!sound) return;
+    sound.pause();
+  }
+
+  playMusic(name) {
+    if (this.currentMusic && this.currentMusic !== name) {
+      this.stop(this.currentMusic);
+    }
+    this.currentMusic = name;
+    this.play(name);
+  }
+
+  stopAll() {
+    for (const name in this.sounds) {
+      this.stop(name);
+    }
+    this.currentMusic = null;
+  }
+
+  playVictoryFanfare() {
+    if (!this.audioCtx) this.init();
+    if (!this.audioCtx) return;
+    this.resumeContext();
+
+    const now = this.audioCtx.currentTime;
+    const notes = [
+      { f: 523.25, t: 0.0, d: 0.25 },
+      { f: 659.25, t: 0.15, d: 0.25 },
+      { f: 783.99, t: 0.30, d: 0.25 },
+      { f: 1046.50, t: 0.45, d: 0.6 },
+    ];
+
+    notes.forEach(n => {
+      const osc = this.audioCtx.createOscillator();
+      const gain = this.audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(n.f, now + n.t);
+      gain.gain.setValueAtTime(0.15, now + n.t);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + n.t + n.d);
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start(now + n.t);
+      osc.stop(now + n.t + n.d);
+    });
+
+    const chord = [261.63, 329.63, 392.00];
+    chord.forEach((freq, i) => {
+      const osc = this.audioCtx.createOscillator();
+      const gain = this.audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start(now);
+      osc.stop(now + 1.2);
+    });
+  }
+
+  playOneUp() {
+    if (!this.audioCtx) this.init();
+    if (!this.audioCtx) return;
+    this.resumeContext();
+    const now = this.audioCtx.currentTime;
+    const notes = [
+      { f: 987.77, t: 0.0, d: 0.12 },
+      { f: 1318.51, t: 0.12, d: 0.4 },
+    ];
+    notes.forEach(n => {
+      const osc = this.audioCtx.createOscillator();
+      const gain = this.audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(n.f, now + n.t);
+      gain.gain.setValueAtTime(0.12, now + n.t);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + n.t + n.d);
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start(now + n.t);
+      osc.stop(now + n.t + n.d);
+    });
+  }
+}
+
+const audioManager = new AudioManager(AUDIO_CONFIG);
+
+// ============================================================
+// CONFIGURACIÓN DEL JUEGO
+// ============================================================
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const TILE = 32;
+const GRAVITY = 0.6;
+const JUMP_FORCE = -13;
+const SPEED = 4;
+const RUN_SPEED = 7;
+const FRICTION = 0.88;
+
+// ============================================================
+// ESTADO
+// ============================================================
+let gameState = 'loading';
+let score = 0;
+let lives = 3;
+let timeLeft = 300;
+let cameraX = 0;
+let timerInterval = null;
+let selectedCharacter = 'tomy';
+let prispasCollected = 0;
+let menuPreviewFrame = 0;
+let menuPreviewTimer = 0;
+let aranaPreviewFrame = 0;
+let winPreviewFrame = 0;
+let winPreviewTimer = 0;
+
+// ============================================================
+// CARGADOR DE SPRITES
+// ============================================================
+class SpriteLoader {
+  constructor(config) {
+    this.config = config;
+    this.images = {};
+    this.loaded = 0;
+    this.total = Object.keys(config.files).length;
+    this.onComplete = null;
+  }
+
+  load() {
+    const promises = [];
+    for (const [name, fileInfo] of Object.entries(this.config.files)) {
+      const promise = new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          this.images[name] = {
+            image: img,
+            frames: fileInfo.frames,
+            speed: fileInfo.speed,
+            cols: fileInfo.cols,
+            rows: fileInfo.rows,
+            frameWidth: fileInfo.frameWidth,
+            frameHeight: fileInfo.frameHeight,
+            scale: fileInfo.scale,
+            offsetX: fileInfo.offsetX,
+            offsetY: fileInfo.offsetY,
+          };
+          this.loaded++;
+          this.updateLoadingUI();
+          resolve();
+        };
+        img.onerror = () => reject(new Error(`No se pudo cargar: ${fileInfo.src}`));
+        img.src = fileInfo.src;
+      });
+      promises.push(promise);
+    }
+
+    Promise.all(promises)
+      .then(() => {
+        return Promise.race([
+          audioManager.loadAll(),
+          new Promise(r => setTimeout(r, 6000))
+        ]);
+      })
+      .then(() => {
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('start-screen').classList.remove('hidden');
+        gameState = 'menu';
+        audioManager.init();
+        audioManager.playMusic('selectPlayer');
+
+        const resumeAudio = () => {
+          audioManager.resumeContext();
+          if (audioManager.currentMusic !== 'selectPlayer') {
+            audioManager.playMusic('selectPlayer');
+          }
+        };
+        document.addEventListener('touchstart', resumeAudio, { once: true });
+        document.addEventListener('click', resumeAudio, { once: true });
+
+        if (this.onComplete) this.onComplete();
+      })
+      .catch(err => {
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('start-screen').classList.remove('hidden');
+        gameState = 'menu';
+        audioManager.init();
+        if (this.onComplete) this.onComplete();
+        console.error('Error en carga:', err);
+      });
+  }
+
+  updateLoadingUI() {
+    const fill = document.getElementById('loading-fill');
+    if (fill) {
+      const pct = (this.loaded / this.total) * 100;
+      fill.style.width = pct + '%';
+    }
+  }
+
+  get(name) { return this.images[name]; }
+}
+
+const spriteLoader = new SpriteLoader(SPRITE_CONFIG);
+
+// ============================================================
+// SISTEMA DE ANIMACIÓN
+// ============================================================
+class Animator {
+  constructor(loader) {
+    this.loader = loader;
+    this.currentAnim = 'ready';
+    this.currentFrame = 0;
+    this.frameTimer = 0;
+    this.facing = 1;
+    this.isStatic = false;
+    this.staticFrame = 0;
+  }
+
+  setAnimation(name, startFrame = 0) {
+    if (this.currentAnim !== name || this.isStatic) {
+      this.currentAnim = name;
+      this.currentFrame = startFrame;
+      this.frameTimer = 0;
+      this.isStatic = false;
+    }
+  }
+
+  setStaticFrame(name, frameIndex) {
+    if (this.currentAnim !== name || !this.isStatic || this.staticFrame !== frameIndex) {
+      this.currentAnim = name;
+      this.staticFrame = frameIndex;
+      this.currentFrame = frameIndex;
+      this.frameTimer = 0;
+      this.isStatic = true;
+    }
+  }
+
+  update() {
+    if (this.isStatic) return;
+    const spriteData = this.loader.get(this.currentAnim);
+    if (!spriteData) return;
+    this.frameTimer++;
+    if (this.frameTimer >= spriteData.speed) {
+      this.frameTimer = 0;
+      this.currentFrame = (this.currentFrame + 1) % spriteData.frames;
+    }
+  }
+
+  draw(ctx, x, y, facing, playerW, playerH) {
+    const spriteData = this.loader.get(this.currentAnim);
+    if (!spriteData) return;
+
+    const img = spriteData.image;
+    const fw = spriteData.frameWidth;
+    const fh = spriteData.frameHeight;
+    const cols = spriteData.cols;
+    const scale = spriteData.scale;
+    const offX = spriteData.offsetX;
+    const offY = spriteData.offsetY;
+
+    const col = this.currentFrame % cols;
+    const row = Math.floor(this.currentFrame / cols);
+
+    const bleed = 0.5;
+    const sx = col * fw + bleed;
+    const sy = row * fh + bleed;
+    const sfw = fw - bleed * 2;
+    const sfh = fh - bleed * 2;
+
+    const dw = sfw * scale;
+    const dh = sfh * scale;
+
+    ctx.save();
+    ctx.translate(x + playerW / 2 + offX, y + playerH + offY);
+
+    if (facing < 0) {
+      ctx.scale(-1, 1);
+      ctx.translate(-dw, 0);
+    }
+
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(img, sx, sy, sfw, sfh, 0, 0, dw, dh);
+    ctx.imageSmoothingEnabled = true;
+
+    ctx.restore();
+  }
+}
+
+let animator = null;
+
+// ============================================================
+// MAPA
+// ============================================================
+const LEVEL_WIDTH = 120;
+const LEVEL_HEIGHT = 20;
+
+// ============================================================
+// CARGA DE NIVEL DESDE JSON
+// ============================================================
+const TILE_MAP = {
+  0: 1,   // suelo
+  1: 2,   // plataforma
+  2: 3,   // bloque moneda
+  3: 4,   // tubo
+  4: 5,   // bandera
+};
+
+let levelFromJSON = false;
+
+async function loadLevelFromJSON(url) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('No se encontró el archivo');
+    const data = await res.json();
+
+    const map = [];
+    const h = data.height || LEVEL_HEIGHT;
+    const w = data.width || LEVEL_WIDTH;
+
+    for (let y = 0; y < h; y++) {
+      map[y] = [];
+      for (let x = 0; x < w; x++) map[y][x] = 0;
+    }
+
+    if (data.layers) {
+      data.layers.forEach(layer => {
+        if (layer.tiles) {
+          layer.tiles.forEach(tile => {
+            const gameId = TILE_MAP[tile.id];
+            if (gameId !== undefined && tile.y < h && tile.x < w) {
+              map[tile.y][tile.x] = gameId;
+            }
+          });
+        }
+        if (layer.data && layer.width) {
+          for (let i = 0; i < layer.data.length; i++) {
+            const tileId = layer.data[i];
+            if (tileId > 0) {
+              const tx = i % layer.width;
+              const ty = Math.floor(i / layer.width);
+              const gameId = TILE_MAP[tileId - 1];
+              if (gameId !== undefined && ty < h && tx < w) {
+                map[ty][tx] = gameId;
+              }
+            }
+          }
+        }
+      });
+    }
+
+    levelFromJSON = true;
+    return map;
+  } catch (e) {
+    console.warn('No se pudo cargar el nivel JSON:', e.message);
+    console.warn('Usando nivel generado por código.');
+    levelFromJSON = false;
+    return generateLevel();
+  }
+}
+
+// ============================================================
+// GENERACIÓN PROCEDURAL DE NIVEL CON HUECOS Y ESCALERAS
+// ============================================================
+function generateLevel() {
+  const map = [];
+  for (let y = 0; y < LEVEL_HEIGHT; y++) {
+    map[y] = [];
+    for (let x = 0; x < LEVEL_WIDTH; x++) map[y][x] = 0;
+  }
+
+  // Generar suelo con huecos
+  const gaps = [];
+  const gapCount = 4; // 3-6 huecos, promedio 4
+  const safeStart = 10;
+  const safeEnd = LEVEL_WIDTH - 10;
+
+  for (let i = 0; i < gapCount; i++) {
+    let attempts = 0;
+    let placed = false;
+    while (attempts < 50 && !placed) {
+      const gx = safeStart + Math.floor(Math.random() * (safeEnd - safeStart - 4));
+      const gw = 2 + Math.floor(Math.random() * 3); // 2-4 tiles de ancho
+
+      // Verificar que no se solape con huecos existentes
+      let overlaps = false;
+      for (const g of gaps) {
+        if (gx < g.x + g.w + 2 && gx + gw + 2 > g.x) {
+          overlaps = true; break;
+        }
+      }
+      if (!overlaps) {
+        gaps.push({ x: gx, w: gw });
+        placed = true;
+      }
+      attempts++;
+    }
+  }
+
+  // Dibujar suelo (tile=1) respetando huecos
+  for (let x = 0; x < LEVEL_WIDTH; x++) {
+    let inGap = false;
+    for (const g of gaps) {
+      if (x >= g.x && x < g.x + g.w) { inGap = true; break; }
+    }
+    if (!inGap) {
+      map[LEVEL_HEIGHT - 1][x] = 1;
+      map[LEVEL_HEIGHT - 2][x] = 1;
+    }
+  }
+
+  function plat(x, y, w, t = 2) {
+    for (let i = 0; i < w; i++) if (x + i < LEVEL_WIDTH) map[y][x + i] = t;
+  }
+
+  // Plataformas azules (tile=2) subidas 3-4 tiles sobre suelo (y entre 14 y 11)
+  // NUNCA tocando el suelo (y=18-19)
+  plat(3, 14, 4);   plat(10, 13, 3);  plat(16, 11, 2, 3); plat(22, 13, 3);
+  plat(28, 11, 4);  plat(35, 11, 2, 3); plat(40, 11, 3);  plat(46, 13, 2);
+  plat(50, 10, 4);  plat(57, 11, 2, 3); plat(62, 10, 3);  plat(68, 12, 2);
+  plat(72, 9, 4);   plat(78, 10, 2, 3); plat(83, 10, 3);  plat(88, 12, 2);
+  plat(92, 8, 4);   plat(98, 10, 2, 3); plat(103, 9, 3);  plat(108, 11, 2);
+  plat(112, 8, 4);  plat(5, 11, 3);    plat(12, 10, 2);  plat(18, 9, 3);
+  plat(25, 10, 2);  plat(32, 8, 4);   plat(38, 8, 2, 3); plat(44, 7, 3);
+  plat(52, 9, 2);   plat(58, 6, 4);   plat(64, 7, 2, 3); plat(70, 6, 3);
+
+  // Escaleras de rescate
+  plat(55, 16, 3);  plat(58, 15, 2);  plat(60, 14, 2);
+  plat(105, 16, 3); plat(108, 15, 2); plat(110, 14, 2);
+
+  // Bandera final
+  map[LEVEL_HEIGHT - 6][LEVEL_WIDTH - 5] = 5;
+  map[LEVEL_HEIGHT - 7][LEVEL_WIDTH - 5] = 5;
+  map[LEVEL_HEIGHT - 8][LEVEL_WIDTH - 5] = 5;
+  map[LEVEL_HEIGHT - 9][LEVEL_WIDTH - 5] = 5;
+  map[LEVEL_HEIGHT - 6][LEVEL_WIDTH - 4] = 5;
+
+  return map;
+}
+let levelMap = generateLevel();
+
+// ============================================================
+// JUGADOR
+// ============================================================
+const GROUND_Y = (LEVEL_HEIGHT - 2) * TILE;
+const player = {
+  x: 64,
+  y: GROUND_Y - 48,
+  w: 28,
+  h: 48,
+  vx: 0,
+  vy: 0,
+  onGround: true,
+  facing: 1,
+  invincible: 0,
+  celebrating: false,
+  celebrateTimer: 0,
+};
+
+// ============================================================
+// ENEMIGOS ALEATORIOS CON TIPOS Y DIFICULTAD PROGRESIVA
+// ============================================================
+function createEnemies() {
+  const enemies = [];
+  const count = 12 + Math.floor(Math.random() * 9); // 12-20 enemigos
+
+  const types = ['goomba', 'big', 'fast', 'fly', 'hunter'];
+
+  for (let i = 0; i < count; i++) {
+    const tileX = 15 + Math.floor(Math.random() * (LEVEL_WIDTH - 25));
+    const x = tileX * TILE;
+
+    // Determinar tipos disponibles según dificultad progresiva
+    let availableTypes = [];
+    if (tileX < 40) {
+      // Primer tercio: solo normales y rápidos
+      availableTypes = ['goomba', 'fast'];
+    } else if (tileX < 80) {
+      // Segundo tercio: normales, rápidos, grandes, cazadores
+      availableTypes = ['goomba', 'big', 'fast', 'hunter'];
+    } else {
+      // Último tercio: todos
+      availableTypes = ['goomba', 'big', 'fast', 'fly', 'hunter'];
+    }
+
+    // Probabilidades por tipo
+    let type;
+    const rand = Math.random();
+    if (rand < 0.40) type = 'goomba';
+    else if (rand < 0.60) type = 'big';
+    else if (rand < 0.80) type = 'fast';
+    else if (rand < 0.90) type = 'fly';
+    else type = 'hunter';
+
+    // Si el tipo no está disponible en esta zona, elegir uno que sí
+    if (!availableTypes.includes(type)) {
+      type = availableTypes[Math.floor(Math.random() * availableTypes.length)];
+    }
+
+    // Configuración según tipo
+    let w, h, vx, vy = 0, startY;
+    let canStomp = true;
+    let color, eyeColor, hornColor;
+
+    switch (type) {
+      case 'goomba':
+        w = 28; h = 28;
+        vx = 1.0 + Math.random() * 0.5; // 1.0-1.5
+        startY = GROUND_Y - 28;
+        color = '#dc143c'; eyeColor = '#ffff00'; hornColor = '#8b0000';
+        break;
+      case 'big':
+        w = 44; h = 44;
+        vx = 0.6 + Math.random() * 0.3; // 0.6-0.9
+        startY = GROUND_Y - 44;
+        canStomp = false;
+        color = '#8b0000'; eyeColor = '#ffcc00'; hornColor = '#4a0000';
+        break;
+      case 'fast':
+        w = 22; h = 22;
+        vx = 2.0 + Math.random() * 0.8; // 2.0-2.8
+        startY = GROUND_Y - 22;
+        color = '#00ffff'; eyeColor = '#ffffff'; hornColor = '#008b8b';
+        break;
+      case 'fly':
+        w = 28; h = 28;
+        vx = 1.0;
+        startY = GROUND_Y - 80 - Math.random() * 60; // Volando
+        color = '#ff69b4'; eyeColor = '#00ffff'; hornColor = '#ff00ff';
+        break;
+      case 'hunter':
+        w = 28; h = 28;
+        vx = 1.0;
+        startY = GROUND_Y - 28;
+        color = '#9932cc'; eyeColor = '#ff00ff'; hornColor = '#4b0082';
+        break;
+    }
+
+    // Dirección aleatoria
+    if (Math.random() < 0.5) vx = -vx;
+
+    enemies.push({
+      x, y: startY, w, h, vx, vy,
+      type, dead: false,
+      canStomp,
+      color, eyeColor, hornColor,
+      // Propiedades específicas
+      baseY: startY,           // Para voladores (onda senoidal)
+      flyPhase: Math.random() * Math.PI * 2,
+      huntSpeed: 2.5,          // Velocidad de cazador al perseguir
+      originalVx: vx,          // Guardar velocidad original
+    });
+  }
+
+  return enemies;
+}
+let enemies = [];
+
+// ============================================================
+// MONEDAS / ITEMS / PRISPAS
+// ============================================================
+function createCoins() {
+  const coins = [];
+  const pos = [
+    [4,13],[5,13],[6,13],[11,12],[12,12],[17,11],[18,11],[29,10],[30,10],[31,10],
+    [36,11],[37,11],[41,10],[42,10],[51,9],[52,9],[53,9],[58,11],[59,11],
+    [63,9],[64,9],[69,11],[73,8],[74,8],[75,8],[79,10],[80,10],[84,9],[85,9],
+    [89,11],[93,7],[94,7],[95,7],[99,10],[100,10],[104,8],[105,8],[109,10],
+    [113,7],[114,7],[115,7],[6,10],[7,10],[13,9],[19,8],[26,9],[27,9],
+    [33,7],[34,7],[39,8],[40,8],[45,6],[46,6],[47,6],[53,8],[54,8],
+    [59,5],[60,5],[65,7],[66,7],[71,5],[72,5],
+  ];
+
+  // Solo 3 prispas en índices [6, 20, 40]
+  const prispasIndices = [6, 20, 40];
+
+  pos.forEach(([cx, cy], index) => {
+    const isPrispas = prispasIndices.includes(index);
+    coins.push({
+      x: cx * TILE + 8,
+      y: cy * TILE + 8,
+      w: 16,
+      h: 16,
+      collected: false,
+      bob: Math.random() * Math.PI * 2,
+      type: isPrispas ? 'prispas' : 'item',
+    });
+  });
+  return coins;
+}
+let coins = [];
+
+// ============================================================
+// PARTÍCULAS
+// ============================================================
+let particles = [];
+function spawnParticles(x, y, color, count = 8) {
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x, y,
+      vx: (Math.random() - 0.5) * 6,
+      vy: (Math.random() - 1) * 6,
+      life: 30 + Math.random() * 20,
+      color,
+      size: 3 + Math.random() * 4,
+    });
+  }
+}
+
+// ============================================================
+// INPUT — TECLADO + TÁCTIL
+// ============================================================
+const keys = {};
+window.addEventListener('keydown', e => {
+  keys[e.code] = true;
+  if (e.code === 'KeyR' && (gameState === 'playing' || gameState === 'gameover' || gameState === 'win')) restartGame();
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
+});
+window.addEventListener('keyup', e => { keys[e.code] = false; });
+
+const touchKeys = {};
+function setupTouch(btnId, keyCode) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  const setKey = (val) => { touchKeys[keyCode] = val; };
+
+  btn.addEventListener('touchstart', e => { e.preventDefault(); setKey(true); }, { passive: false });
+  btn.addEventListener('touchend', e => { e.preventDefault(); setKey(false); }, { passive: false });
+  btn.addEventListener('touchcancel', e => { e.preventDefault(); setKey(false); }, { passive: false });
+  btn.addEventListener('mousedown', e => { e.preventDefault(); setKey(true); });
+  btn.addEventListener('mouseup', e => { e.preventDefault(); setKey(false); });
+  btn.addEventListener('mouseleave', e => { e.preventDefault(); setKey(false); });
+}
+
+setupTouch('btn-left', 'ArrowLeft');
+setupTouch('btn-right', 'ArrowRight');
+setupTouch('btn-up', 'ArrowUp');
+setupTouch('btn-down', 'ArrowDown');
+setupTouch('btn-jump', 'ArrowUp');   // botón A = saltar
+setupTouch('btn-run', 'ShiftLeft');    // botón B = correr
+
+function isKeyDown(code) { return keys[code] || touchKeys[code]; }
+
+// ============================================================
+// SELECTOR DE PERSONAJE
+// ============================================================
+function selectCharacter(name) {
+  if (name !== 'tomy') return;
+  selectedCharacter = name;
+  const tomyCard = document.getElementById('character-tomy');
+  tomyCard.classList.add('selected');
+  tomyCard.setAttribute('aria-pressed', 'true');
+}
+
+// ============================================================
+// PREVIEWS DEL MENÚ
+// ============================================================
+function drawTomyPreview() {
+  const preview = document.getElementById('character-preview');
+  const spriteData = spriteLoader.get('ready');
+  if (!preview || !spriteData) return;
+  const previewCtx = preview.getContext('2d');
+  const col = menuPreviewFrame % spriteData.cols;
+  const row = Math.floor(menuPreviewFrame / spriteData.cols);
+  const dw = 80;
+  const dh = 153;
+  previewCtx.clearRect(0, 0, preview.width, preview.height);
+  previewCtx.imageSmoothingEnabled = true;
+  previewCtx.drawImage(
+    spriteData.image,
+    col * spriteData.frameWidth, row * spriteData.frameHeight,
+    spriteData.frameWidth, spriteData.frameHeight,
+    (preview.width - dw) / 2, 0, dw, dh,
+  );
+}
+
+function drawAranaPreview() {
+  const preview = document.getElementById('arana-preview');
+  const spriteData = spriteLoader.get('arana-ready');
+  if (!preview || !spriteData) return;
+  const previewCtx = preview.getContext('2d');
+  const col = aranaPreviewFrame % spriteData.cols;
+  const row = Math.floor(aranaPreviewFrame / spriteData.cols);
+  const dw = 80;
+  const dh = 153;
+  previewCtx.clearRect(0, 0, preview.width, preview.height);
+  previewCtx.imageSmoothingEnabled = true;
+  previewCtx.drawImage(
+    spriteData.image,
+    col * spriteData.frameWidth, row * spriteData.frameHeight,
+    spriteData.frameWidth, spriteData.frameHeight,
+    (preview.width - dw) / 2, 0, dw, dh,
+  );
+}
+
+function updateMenuPreview() {
+  if (gameState !== 'menu') return;
+  menuPreviewTimer++;
+  if (menuPreviewTimer >= 6) {
+    menuPreviewTimer = 0;
+    const tomyData = spriteLoader.get('ready');
+    const aranaData = spriteLoader.get('arana-ready');
+    if (tomyData) menuPreviewFrame = (menuPreviewFrame + 1) % tomyData.frames;
+    if (aranaData) aranaPreviewFrame = (aranaPreviewFrame + 1) % aranaData.frames;
+    drawTomyPreview();
+    drawAranaPreview();
+  }
+  requestAnimationFrame(updateMenuPreview);
+}
+
+function drawWinCharacter() {
+  const preview = document.getElementById('win-character-preview');
+  const spriteData = spriteLoader.get('celebrate');
+  if (!preview || !spriteData) return;
+  const previewCtx = preview.getContext('2d');
+
+  const col = winPreviewFrame % spriteData.cols;
+  const row = Math.floor(winPreviewFrame / spriteData.cols);
+
+  // Usar dimensiones del config para evitar deformación
+  const fw = spriteData.frameWidth;
+  const fh = spriteData.frameHeight;
+
+  // Calcular scale automático para llenar el canvas manteniendo proporción
+  const maxW = preview.width - 4;   // 86
+  const maxH = preview.height - 4;  // 146
+  const aspect = fw / fh;           // 408 / 717 = 0.569
+
+  let dh = maxH;          // ajustar a altura primero
+  let dw = dh * aspect;   // 146 * 0.569 = 83
+  if (dw > maxW) {        // si no cabe en el ancho
+    dw = maxW;            // 86
+    dh = dw / aspect;     // 86 / 0.569 = 151
+  }
+
+  previewCtx.clearRect(0, 0, preview.width, preview.height);
+  previewCtx.imageSmoothingEnabled = false;
+  previewCtx.drawImage(
+    spriteData.image,
+    col * fw, row * fh,
+    fw, fh,
+    (preview.width - dw) / 2, (preview.height - dh) / 2,
+    dw, dh
+  );
+}
+
+function updateWinPreview() {
+  if (gameState !== 'win') return;
+  winPreviewTimer++;
+  if (winPreviewTimer >= 5) {
+    winPreviewTimer = 0;
+    const celData = spriteLoader.get('celebrate');
+    if (celData) {
+      winPreviewFrame = (winPreviewFrame + 1) % celData.frames;
+      drawWinCharacter();
+    }
+  }
+  requestAnimationFrame(updateWinPreview);
+}
+
+// ============================================================
+// FÍSICA
+// ============================================================
+function getTile(x, y) {
+  const tx = Math.floor(x / TILE), ty = Math.floor(y / TILE);
+  if (ty < 0 || ty >= LEVEL_HEIGHT || tx < 0 || tx >= LEVEL_WIDTH) return 0;
+  return levelMap[ty][tx];
+}
+function isSolid(tile) { return tile === 1 || tile === 2 || tile === 3 || tile === 4; }
+function rectIntersect(a, b) { return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y; }
+
+function updatePlayer() {
+  if (player.celebrating) {
+    player.celebrateTimer--;
+    if (player.celebrateTimer <= 0) player.celebrating = false;
+    animator.setAnimation('run');
+    animator.update();
+    return;
+  }
+
+  const isRunning = isKeyDown('ShiftLeft') || isKeyDown('ShiftRight') || isKeyDown('KeyX');
+  const maxSpeed = isRunning ? RUN_SPEED : SPEED;
+  const accel = isRunning ? 1.8 : 0.8;
+  const jumpForce = isRunning ? JUMP_FORCE * 1.15 : JUMP_FORCE;
+
+  if (isKeyDown('ArrowLeft') || isKeyDown('KeyA')) { player.vx -= accel; player.facing = -1; }
+  if (isKeyDown('ArrowRight') || isKeyDown('KeyD')) { player.vx += accel; player.facing = 1; }
+  player.vx *= FRICTION;
+  player.vx = Math.max(-maxSpeed, Math.min(maxSpeed, player.vx));
+
+  if ((isKeyDown('ArrowUp') || isKeyDown('KeyW') || isKeyDown('Space')) && player.onGround) {
+    player.vy = jumpForce;
+    player.onGround = false;
+    spawnParticles(player.x + player.w / 2, player.y + player.h, '#ffd700', 5);
+    audioManager.play('jump');
+  }
+  player.vy += GRAVITY;
+
+  player.x += player.vx;
+  if (player.x < 0) { player.x = 0; player.vx = 0; }
+  if (player.x > LEVEL_WIDTH * TILE - player.w) { player.x = LEVEL_WIDTH * TILE - player.w; }
+
+  const left = Math.floor(player.x / TILE), right = Math.floor((player.x + player.w - 1) / TILE);
+  const top = Math.floor(player.y / TILE), bottom = Math.floor((player.y + player.h - 1) / TILE);
+  for (let ty = top; ty <= bottom; ty++) {
+    for (let tx = left; tx <= right; tx++) {
+      if (isSolid(levelMap[ty][tx])) {
+        if (player.vx > 0) { player.x = tx * TILE - player.w - 0.1; player.vx = 0; }
+        else if (player.vx < 0) { player.x = (tx + 1) * TILE + 0.1; player.vx = 0; }
+      }
+    }
+  }
+
+  player.y += player.vy; player.onGround = false;
+  const left2 = Math.floor(player.x / TILE), right2 = Math.floor((player.x + player.w - 1) / TILE);
+  const top2 = Math.floor(player.y / TILE), bottom2 = Math.floor((player.y + player.h - 1) / TILE);
+  for (let ty = top2; ty <= bottom2; ty++) {
+    for (let tx = left2; tx <= right2; tx++) {
+      const tile = levelMap[ty][tx];
+      if (isSolid(tile)) {
+        if (player.vy > 0) { player.y = ty * TILE - player.h - 0.1; player.vy = 0; player.onGround = true; }
+        else if (player.vy < 0) { player.y = (ty + 1) * TILE + 0.1; player.vy = 0; if (tile === 3) { levelMap[ty][tx] = 0; score += 100; spawnParticles(tx * TILE + 16, ty * TILE + 16, '#ffd700', 10); updateUI(); } }
+      }
+      if (tile === 5) winGame();
+    }
+  }
+
+  // Muerte por caer en hueco
+  if (player.y > LEVEL_HEIGHT * TILE + 50) {
+    playerDie(true); // true = death by falling (gap)
+    return;
+  }
+
+  if (player.invincible > 0) player.invincible--;
+
+  const hasInput = isKeyDown('ArrowLeft') || isKeyDown('KeyA') ||
+                   isKeyDown('ArrowRight') || isKeyDown('KeyD');
+  const isMoving = Math.abs(player.vx) > 0.15;
+
+  if (player.onGround && !hasInput && !isMoving) {
+    animator.setStaticFrame('run', 6);
+  } else {
+    animator.setAnimation('run', 0);
+  }
+  animator.update();
+}
+
+function updateEnemies() {
+  enemies.forEach(e => {
+    if (e.dead) return;
+
+    // Lógica de movimiento según tipo
+    if (e.type === 'fly') {
+      // Movimiento en onda senoidal vertical
+      e.flyPhase += 0.05;
+      e.y = e.baseY + Math.sin(e.flyPhase) * 40;
+      e.x += e.vx;
+    } else if (e.type === 'hunter') {
+      // Detectar jugador a menos de 120px horizontalmente
+      const distX = Math.abs(player.x - e.x);
+      const sameLevel = Math.abs(player.y - e.y) < 100;
+      if (distX < 120 && sameLevel) {
+        // Perseguir al jugador
+        const dir = player.x > e.x ? 1 : -1;
+        e.vx = dir * e.huntSpeed;
+      } else {
+        // Volver a velocidad normal
+        if (Math.abs(e.vx) > Math.abs(e.originalVx)) {
+          e.vx = e.originalVx;
+        } else {
+          e.x += e.vx;
+        }
+      }
+      if (distX < 120 && sameLevel) {
+        e.x += e.vx;
+      } else {
+        e.x += e.vx;
+      }
+    } else {
+      e.x += e.vx;
+    }
+
+    // Rebote en bordes del nivel
+    if (e.x <= 0 || e.x + e.w >= LEVEL_WIDTH * TILE) {
+      e.vx *= -1;
+      e.x = Math.max(0, Math.min(e.x, LEVEL_WIDTH * TILE - e.w));
+      if (e.type === 'hunter') e.originalVx = e.vx;
+      return;
+    }
+
+    // Lógica de suelo/pared solo para enemigos que caminan
+    if (e.type !== 'fly') {
+      const frontX = e.x + (e.vx > 0 ? e.w : 0);
+      const groundAhead = getTile(frontX, e.y + e.h + 4);
+      const wallAhead = getTile(frontX, e.y + e.h / 2);
+
+      if ((!isSolid(groundAhead) && e.type !== 'fly') || isSolid(wallAhead)) {
+        e.vx *= -1;
+        if (e.type === 'hunter') e.originalVx = e.vx;
+      }
+    }
+
+    // Colisión con jugador
+    if (rectIntersect(player, e) && player.invincible <= 0) {
+      const stompFromAbove = player.vy > 0 && player.y + player.h < e.y + e.h / 2 + 8;
+      if (stompFromAbove && e.canStomp) {
+        // Aplastar enemigo
+        e.dead = true;
+        player.vy = JUMP_FORCE * 0.7;
+        score += 200;
+        spawnParticles(e.x + e.w / 2, e.y + e.h / 2, '#ff0040', 12);
+        updateUI();
+        audioManager.play('stomp');
+      } else {
+        // Morir por enemigo grande o no-aplastable
+        playerDie();
+      }
+    }
+  });
+}
+// ============================================================
 // CONFIGURACIÓN DE SPRITES
 // ============================================================
 const SPRITE_CONFIG = {
