@@ -1368,6 +1368,16 @@ function draw() {
     }
   }
 
+
+  enemies.forEach(e => drawEnemy(e));
+
+  particles.forEach(p => { ctx.globalAlpha = p.life / 50; ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size); });
+  ctx.globalAlpha = 1;
+
+  if (player.invincible <= 0 || Math.floor(player.invincible / 4) % 2 === 0) {
+    animator.draw(ctx, player.x, player.y, player.facing, player.w, player.h);
+  }
+
   coins.forEach(c => {
     if (c.collected) return;
     const bobY = Math.sin(c.bob) * 4;
@@ -1389,16 +1399,6 @@ function draw() {
       }
     }
   });
-
-  enemies.forEach(e => drawEnemy(e));
-
-  particles.forEach(p => { ctx.globalAlpha = p.life / 50; ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size); });
-  ctx.globalAlpha = 1;
-
-  if (player.invincible <= 0 || Math.floor(player.invincible / 4) % 2 === 0) {
-    animator.draw(ctx, player.x, player.y, player.facing, player.w, player.h);
-  }
-
   ctx.restore();
 }
 
