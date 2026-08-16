@@ -1176,9 +1176,7 @@ const player = {
 
   celebrateTimer: 0,
 
-  fallingDeath: false,
 
-  fallingDeathTimer: 0,
 
 };
 
@@ -1804,41 +1802,6 @@ function rectIntersect(a, b) { return a.x < b.x + b.w && a.x + a.w > b.x && a.y 
 
 function updatePlayer() {
 
-  // Animación de muerte por caída en hueco
-
-  if (player.fallingDeath) {
-
-    player.vy += GRAVITY * 1.5;
-
-    player.y += player.vy;
-
-    player.fallingDeathTimer++;
-
-    animator.setAnimation('run');
-
-    animator.update();
-
-    // Respawn cuando sale de pantalla o pasa suficiente tiempo
-
-    if (player.y > canvas.height + 200 || player.fallingDeathTimer > 90) {
-
-      player.fallingDeath = false;
-
-      player.fallingDeathTimer = 0;
-
-      player.invincible = 120;
-
-      player.vy = 0;
-
-      player.x = 64; // respawn seguro al inicio
-
-      player.y = GROUND_Y - player.h;
-
-    }
-
-    return;
-
-  }
 
 
 
@@ -1952,32 +1915,10 @@ function updatePlayer() {
 
 
 
-  // Muerte por caer en hueco - iniciar animación de caída
-
-  if (player.y > LEVEL_HEIGHT * TILE + 50 && !player.fallingDeath) {
-
-    player.fallingDeath = true;
-
-    player.fallingDeathTimer = 0;
-
-    lives--;
-
-    updateUI();
-
-    audioManager.play('death');
-
-    spawnParticles(player.x + player.w / 2, player.y + player.h / 2, '#ff0040', 20);
-
-    if (lives <= 0) {
-
-      gameOver();
-
-      return;
-
-    }
-
+  // Muerte por caer en hueco
+  if (player.y > LEVEL_HEIGHT * TILE + 50) {
+    playerDie(true);
     return;
-
   }
 
 
