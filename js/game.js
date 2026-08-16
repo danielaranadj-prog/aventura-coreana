@@ -46,8 +46,8 @@ const SPRITE_CONFIG = {
 const AUDIO_CONFIG = {
   selectPlayer: { src: 'assets/select-player.mp3', loop: true,  volume: 0.6 },
   gameStart:    { src: 'assets/game-start.mp3',    loop: false, volume: 0.7 },
-  gameAdventure:{ src: 'assets/game-adventure.mp3', loop: true,  volume: 0.5 },
-  death:        { src: 'assets/death.mp3',         loop: false, volume: 0.8 },
+  gameAdventure:{ src: 'assets/game-adventure.mp3', loop: true,  volume: 0.6 },
+  death:        { src: 'assets/death.mp3',         loop: false, volume: 0.4 },
   fail:         { src: 'assets/fail.mp3',          loop: false, volume: 0.8 },
   jump:         { src: 'assets/jump.mp3',          loop: false, volume: 0.25 },
   stomp:        { src: 'assets/stomp.mp3',         loop: false, volume: 0.35 },
@@ -597,25 +597,11 @@ function createEnemies() {
   const enemies = [];
   const count = 12 + Math.floor(Math.random() * 9); // 12-20 enemigos
 
-  // Obtener plataformas azules de la parte baja (y >= 10) para poner enemigos sobre ellas
-  const bluePlatforms = [];
-  for (let y = 10; y < LEVEL_HEIGHT; y++) {
-    for (let x = 0; x < LEVEL_WIDTH; x++) {
-      if (levelMap[y][x] === 2) {
-        let w = 1;
-        while (x + w < LEVEL_WIDTH && levelMap[y][x + w] === 2) w++;
-        bluePlatforms.push({ x: x * TILE, y: y * TILE, w: w * TILE });
-        x += w - 1;
-      }
-    }
-  }
-  bluePlatforms.sort(() => Math.random() - 0.5);
-
   const types = ['goomba', 'big', 'fast', 'fly', 'hunter'];
 
   for (let i = 0; i < count; i++) {
-    let tileX = 15 + Math.floor(Math.random() * (LEVEL_WIDTH - 25));
-    let x = tileX * TILE;
+    const tileX = 15 + Math.floor(Math.random() * (LEVEL_WIDTH - 25));
+    const x = tileX * TILE;
 
     // Determinar tipos disponibles según dificultad progresiva
     let availableTypes = [];
@@ -648,7 +634,6 @@ function createEnemies() {
     let w, h, vx, vy = 0, startY;
     let canStomp = true;
     let color, eyeColor, hornColor;
-    let onPlatform = false;
 
     switch (type) {
       case 'goomba':
@@ -673,8 +658,7 @@ function createEnemies() {
       case 'fly':
         w = 28; h = 28;
         vx = 1.0;
-        // Voladores más arriba en el nivel (entre y=4 y y=10 en tiles)
-        startY = (4 + Math.random() * 6) * TILE;
+        startY = GROUND_Y - 80 - Math.random() * 60; // Volando
         color = '#ff69b4'; eyeColor = '#00ffff'; hornColor = '#ff00ff';
         break;
       case 'hunter':
@@ -683,14 +667,6 @@ function createEnemies() {
         startY = GROUND_Y - 28;
         color = '#9932cc'; eyeColor = '#ff00ff'; hornColor = '#4b0082';
         break;
-    }
-
-    // Reubicar algunos enemigos caminantes a plataformas azules bajas
-    if (type !== 'fly' && type !== 'big' && bluePlatforms.length > 0 && Math.random() < 0.45) {
-      const plat = bluePlatforms.pop();
-      x = plat.x + 4 + Math.random() * (plat.w - w - 8);
-      startY = plat.y - h;
-      onPlatform = true;
     }
 
     // Dirección aleatoria
@@ -706,7 +682,6 @@ function createEnemies() {
       flyPhase: Math.random() * Math.PI * 2,
       huntSpeed: 2.5,          // Velocidad de cazador al perseguir
       originalVx: vx,          // Guardar velocidad original
-      onPlatform,
     });
   }
 
@@ -719,15 +694,13 @@ let enemies = [];
 // ============================================================
 function createCoins() {
   const coins = [];
-  const pos = [
-    [4,15],[5,15],[6,15],[11,14],[12,14],[17,13],[18,13],[29,12],[30,12],[31,12],
-    [36,13],[37,13],[41,12],[42,12],[51,11],[52,11],[53,11],[58,13],[59,13],
-    [63,11],[64,11],[69,13],[73,10],[74,10],[75,10],[79,12],[80,12],[84,11],[85,11],
-    [89,13],[93,9],[94,9],[95,9],[99,12],[100,12],[104,10],[105,10],[109,12],
-    [113,9],[114,9],[115,9],[6,12],[7,12],[13,11],[19,10],[26,11],[27,11],
-    [33,9],[34,9],[39,10],[40,10],[45,8],[46,8],[47,8],[53,10],[54,10],
-    [59,7],[60,7],[65,9],[66,9],[71,7],[72,7],
-  ];
+  const pos = [    [4,12],[5,12],[6,12],[11,11],[12,11],[17,10],[18,10],[29,9],[30,9],[31,9]
+    ,[36,10],[37,10],[41,9],[42,9],[51,8],[52,8],[53,8],[58,10],[59,10],[63,8]
+    ,[64,8],[69,10],[73,7],[74,7],[75,7],[79,9],[80,9],[84,8],[85,8],[89,10]
+    ,[93,6],[94,6],[95,6],[99,9],[100,9],[104,7],[105,7],[109,9],[113,6],[114,6]
+    ,[115,6],[6,9],[7,9],[13,8],[19,7],[26,8],[27,8],[33,6],[34,6],[39,7]
+    ,[40,7],[45,5],[46,5],[47,5],[53,7],[54,7],[59,4],[60,4],[65,6],[66,6]
+    ,[71,4],[72,4]];
 
   // Solo 3 prispas en índices [6, 20, 40]
   const prispasIndices = [6, 20, 40];
@@ -1393,16 +1366,6 @@ function draw() {
     }
   }
 
-
-  enemies.forEach(e => drawEnemy(e));
-
-  particles.forEach(p => { ctx.globalAlpha = p.life / 50; ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size); });
-  ctx.globalAlpha = 1;
-
-  if (player.invincible <= 0 || Math.floor(player.invincible / 4) % 2 === 0) {
-    animator.draw(ctx, player.x, player.y, player.facing, player.w, player.h);
-  }
-
   coins.forEach(c => {
     if (c.collected) return;
     const bobY = Math.sin(c.bob) * 4;
@@ -1424,6 +1387,16 @@ function draw() {
       }
     }
   });
+
+  enemies.forEach(e => drawEnemy(e));
+
+  particles.forEach(p => { ctx.globalAlpha = p.life / 50; ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size); });
+  ctx.globalAlpha = 1;
+
+  if (player.invincible <= 0 || Math.floor(player.invincible / 4) % 2 === 0) {
+    animator.draw(ctx, player.x, player.y, player.facing, player.w, player.h);
+  }
+
   ctx.restore();
 }
 
