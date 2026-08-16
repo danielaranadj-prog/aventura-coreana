@@ -597,11 +597,25 @@ function createEnemies() {
   const enemies = [];
   const count = 12 + Math.floor(Math.random() * 9); // 12-20 enemigos
 
+  // Obtener plataformas azules de la parte baja (y >= 10) para poner enemigos sobre ellas
+  const bluePlatforms = [];
+  for (let y = 10; y < LEVEL_HEIGHT; y++) {
+    for (let x = 0; x < LEVEL_WIDTH; x++) {
+      if (levelMap[y][x] === 2) {
+        let w = 1;
+        while (x + w < LEVEL_WIDTH && levelMap[y][x + w] === 2) w++;
+        bluePlatforms.push({ x: x * TILE, y: y * TILE, w: w * TILE });
+        x += w - 1;
+      }
+    }
+  }
+  bluePlatforms.sort(() => Math.random() - 0.5);
+
   const types = ['goomba', 'big', 'fast', 'fly', 'hunter'];
 
   for (let i = 0; i < count; i++) {
-    const tileX = 15 + Math.floor(Math.random() * (LEVEL_WIDTH - 25));
-    const x = tileX * TILE;
+    let tileX = 15 + Math.floor(Math.random() * (LEVEL_WIDTH - 25));
+    let x = tileX * TILE;
 
     // Determinar tipos disponibles según dificultad progresiva
     let availableTypes = [];
@@ -634,6 +648,7 @@ function createEnemies() {
     let w, h, vx, vy = 0, startY;
     let canStomp = true;
     let color, eyeColor, hornColor;
+    let onPlatform = false;
 
     switch (type) {
       case 'goomba':
@@ -658,7 +673,8 @@ function createEnemies() {
       case 'fly':
         w = 28; h = 28;
         vx = 1.0;
-        startY = GROUND_Y - 80 - Math.random() * 60; // Volando
+        // Voladores más arriba en el nivel (entre y=4 y y=10 en tiles)
+        startY = (4 + Math.random() * 6) * TILE;
         color = '#ff69b4'; eyeColor = '#00ffff'; hornColor = '#ff00ff';
         break;
       case 'hunter':
@@ -667,6 +683,14 @@ function createEnemies() {
         startY = GROUND_Y - 28;
         color = '#9932cc'; eyeColor = '#ff00ff'; hornColor = '#4b0082';
         break;
+    }
+
+    // Reubicar algunos enemigos caminantes a plataformas azules bajas
+    if (type !== 'fly' && type !== 'big' && bluePlatforms.length > 0 && Math.random() < 0.45) {
+      const plat = bluePlatforms.pop();
+      x = plat.x + 4 + Math.random() * (plat.w - w - 8);
+      startY = plat.y - h;
+      onPlatform = true;
     }
 
     // Dirección aleatoria
@@ -682,6 +706,7 @@ function createEnemies() {
       flyPhase: Math.random() * Math.PI * 2,
       huntSpeed: 2.5,          // Velocidad de cazador al perseguir
       originalVx: vx,          // Guardar velocidad original
+      onPlatform,
     });
   }
 
