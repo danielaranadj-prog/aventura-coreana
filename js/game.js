@@ -518,6 +518,10 @@ function generateLevel() {
   plat(25, 10, 2);  plat(32, 8, 4);   plat(38, 9, 2, 3); plat(44, 7, 3);
   plat(52, 9, 2);   plat(58, 6, 4);   plat(64, 8, 2, 3); plat(70, 6, 3);
 
+  // Escaleras de rescate — si caes al suelo puedes volver a subir
+  plat(55, 16, 3);  plat(58, 15, 2);  plat(60, 14, 2);
+  plat(105, 16, 3); plat(108, 15, 2); plat(110, 14, 2);
+
   // Bandera final
   map[LEVEL_HEIGHT - 6][LEVEL_WIDTH - 5] = 5;
   map[LEVEL_HEIGHT - 7][LEVEL_WIDTH - 5] = 5;
@@ -1140,7 +1144,7 @@ function startGame() {
   document.getElementById('gameover-screen').classList.add('hidden');
   document.getElementById('win-screen').classList.add('hidden');
   document.getElementById('menu-button').classList.remove('hidden');
-  document.getElementById('mobile-controls').style.display = 'flex';
+  const mc = document.getElementById('mobile-controls'); mc.classList.remove('hidden'); mc.style.display = 'flex';
   score = 0; lives = 3; timeLeft = 300; cameraX = 0; prispasCollected = 0;
   player.x = 64; player.y = GROUND_Y - player.h; player.vx = 0; player.vy = 0; player.invincible = 0;
   player.onGround = true;
@@ -1179,7 +1183,7 @@ function returnToMenu() {
   document.getElementById('gameover-screen').classList.add('hidden');
   document.getElementById('win-screen').classList.add('hidden');
   document.getElementById('menu-button').classList.add('hidden');
-  document.getElementById('mobile-controls').style.display = 'none';
+  const mc2 = document.getElementById('mobile-controls'); mc2.classList.add('hidden'); mc2.style.display = 'none';
   document.getElementById('start-screen').classList.remove('hidden');
   audioManager.stopAll();
   audioManager.playMusic('selectPlayer');
@@ -1191,7 +1195,7 @@ function gameOver() {
   if (timerInterval) clearInterval(timerInterval);
   document.getElementById('final-score').textContent = score;
   document.getElementById('gameover-screen').classList.remove('hidden');
-  document.getElementById('mobile-controls').style.display = 'none';
+  const mc2 = document.getElementById('mobile-controls'); mc2.classList.add('hidden'); mc2.style.display = 'none';
   audioManager.stopAll();
   audioManager.play('fail');
 }
@@ -1206,7 +1210,7 @@ function winGame() {
   drawWinCharacter(); requestAnimationFrame(updateWinPreview);
   document.getElementById('win-score').textContent = score;
   document.getElementById('win-screen').classList.remove('hidden');
-  document.getElementById('mobile-controls').style.display = 'none';
+  const mc2 = document.getElementById('mobile-controls'); mc2.classList.add('hidden'); mc2.style.display = 'none';
   spawnParticles(player.x + player.w / 2, player.y, '#ffd700', 30);
   audioManager.stopAll();
   audioManager.playVictoryFanfare();
