@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🧥 Aventura 2D — TOMY Edition</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a1a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    overflow: hidden;
+    color: #fff;
+  }
+  #game-wrapper {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 0 50px rgba(220,38,38,0.2), 0 0 100px rgba(220,38,38,0.05);
+  }
+  canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
+  #ui-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 20px;
+    font-size: 18px;
+    font-weight: 700;
+    text-shadow: 2px 2px 0 #000, 0 0 10px rgba(0,0,0,0.5);
+    pointer-events: none;
+    z-index: 10;
+  }
+  #ui-overlay span { display: flex; align-items: center; gap: 6px; }
+  #menu-button {
+    position: absolute;
+    top: 52px;
+    right: 14px;
+    z-index: 15;
+    padding: 8px 13px;
+    border: 1px solid rgba(255,255,255,.35);
+    border-radius: 8px;
+    background: rgba(15,23,42,.86);
+    color: #fff;
+    font: 700 13px 'Segoe UI', system-ui, sans-serif;
+    cursor: pointer;
+  }
+  #menu-button:hover { background: #1e293b; }
+  #controls-hint {
+    margin-top: 16px;
+    text-align: center;
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.8;
+  }
+  #controls-hint kbd {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-family: monospace;
+    font-size: 12px;
+    color: #e2e8f0;
+  }
+  #start-screen, #gameover-screen, #win-screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.9);
+    z-index: 20;
+    text-align: center;
+  }
+  #start-screen h1 {
+    font-size: 40px;
+    margin-bottom: 8px;
+    background: linear-gradient(90deg, #dc2626, #f59e0b, #dc2626);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 20px rgba(220,38,38,0.5));
+  }
+  #start-screen p { color: #94a3b8; margin-bottom: 16px; font-size: 15px; }
+  .character-list {
+    display: flex;
+    gap: 16px;
+    margin: 4px 0 20px;
+  }
+  .character-card {
+    width: 150px;
+    min-height: 218px;
+    padding: 10px;
+    border: 2px solid #334155;
+    border-radius: 14px;
+    background: linear-gradient(160deg, #172033, #0f172a);
+    color: #e2e8f0;
+    cursor: pointer;
+    font: inherit;
+    transition: transform .15s, border-color .15s, box-shadow .15s;
+  }
+  .character-card:hover:not(:disabled), .character-card.selected {
+    transform: translateY(-4px);
+    border-color: #f59e0b;
+    box-shadow: 0 0 22px rgba(245,158,11,.32);
+  }
+  .character-card:disabled { opacity: .48; cursor: not-allowed; }
+  #character-preview {
+    display: block;
+    width: 126px;
+    height: 174px;
+    margin: 0 auto 5px;
+  }
+  .character-name { display: block; font-weight: 800; font-size: 15px; }
+  .character-status { display: block; margin-top: 3px; color: #94a3b8; font-size: 11px; }
+  .future-avatar {
+    display: grid;
+    place-items: center;
+    height: 174px;
+    margin-bottom: 5px;
+    border-radius: 9px;
+    background: rgba(148,163,184,.1);
+    color: #94a3b8;
+    font-size: 45px;
+  }
+  .btn {
+    padding: 14px 40px;
+    font-size: 18px;
+    font-weight: 700;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .btn:hover { transform: scale(1.05); }
+  .btn-primary {
+    background: linear-gradient(135deg, #dc2626, #991b1b);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(220,38,38,0.4);
+  }
+  .btn-green {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(16,185,129,0.4);
+  }
+  .screen-title { font-size: 36px; margin-bottom: 12px; }
+  .screen-sub { color: #94a3b8; margin-bottom: 20px; font-size: 16px; }
+  #win-character-preview {
+    display: block;
+    width: 116px;
+    height: 170px;
+    margin: -8px auto 2px;
+  }
+  .hidden { display: none !important; }
+  #mobile-controls {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    left: 0; right: 0;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 30;
+  }
+  .mobile-btn {
+    width: 70px; height: 70px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    border: 2px solid rgba(255,255,255,0.25);
+    color: #fff;
+    font-size: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    backdrop-filter: blur(4px);
+  }
+  .mobile-btn:active { background: rgba(255,255,255,0.3); }
+  .mobile-dpad { display: flex; gap: 12px; }
+  @media (max-width: 900px) {
+    #mobile-controls { display: flex; }
+    #controls-hint { display: none; }
+  }
+  #loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #0a0a1a;
+    z-index: 50;
+    font-size: 18px;
+    color: #94a3b8;
+  }
+  #loading-spinner {
+    width: 40px; height: 40px;
+    border: 3px solid #334155;
+    border-top-color: #dc2626;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading-status { font-size: 13px; color: #64748b; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<div id="game-wrapper">
+  <canvas id="game" width="800" height="480"></canvas>
+
+  <div id="loading">
+    <div id="loading-spinner"></div>
+    <span>Cargando sprites de TOMY...</span>
+    <div id="loading-status">0 / 4 archivos cargados</div>
+  </div>
+
+  <div id="ui-overlay">
+    <span>🪙 <span id="score">0</span></span>
+    <span>❤️ <span id="lives">3</span></span>
+    <span>⏱️ <span id="time">300</span></span>
+  </div>
+  <button id="menu-button" class="hidden" type="button" onclick="returnToMenu()">☰ Menú</button>
+
+  <div id="start-screen" class="hidden">
+    <h1>🧥 Aventura TOMY</h1>
+    <p>Elige tu personaje</p>
+    <div class="character-list" role="group" aria-label="Elegir personaje">
+      <button class="character-card selected" id="character-tomy" type="button" onclick="selectCharacter('tomy')" aria-pressed="true">
+        <canvas id="character-preview" width="126" height="174"></canvas>
+        <span class="character-name">TOMY</span>
+        <span class="character-status">Seleccionado</span>
+      </button>
+      <button class="character-card" type="button" disabled title="Próximamente">
+        <span class="future-avatar">?</span>
+        <span class="character-name">Próximamente</span>
+        <span class="character-status">Nuevo personaje</span>
+      </button>
+    </div>
+    <button class="btn btn-primary" onclick="startGame()">▶ Jugar</button>
+  </div>
+
+  <div id="gameover-screen" class="hidden">
+    <div class="screen-title">💀 Game Over</div>
+    <div class="screen-sub">Puntuación: <span id="final-score">0</span></div>
+    <button class="btn btn-primary" onclick="restartGame()">↻ Reintentar</button>
+    <button class="btn" onclick="returnToMenu()">☰ Menú</button>
+  </div>
+
+  <div id="win-screen" class="hidden">
+    <div class="screen-title">🏆 ¡Victoria!</div>
+    <canvas id="win-character-preview" width="116" height="170" aria-label="TOMY celebrando"></canvas>
+    <div class="screen-sub">Puntuación: <span id="win-score">0</span></div>
+    <button class="btn btn-green" onclick="restartGame()">↻ Jugar de nuevo</button>
+    <button class="btn" onclick="returnToMenu()">☰ Menú</button>
+  </div>
+</div>
+
+<div id="controls-hint">
+  <kbd>←</kbd> <kbd>→</kbd> o <kbd>A</kbd> <kbd>D</kbd> — Moverse &nbsp;&nbsp;|&nbsp;&nbsp;
+  <kbd>↑</kbd> <kbd>W</kbd> o <kbd>Space</kbd> — Saltar &nbsp;&nbsp;|&nbsp;&nbsp;
+  <kbd>R</kbd> — Reiniciar
+</div>
+
+<div id="mobile-controls">
+  <div class="mobile-dpad">
+    <div class="mobile-btn" id="btn-left">◀</div>
+    <div class="mobile-btn" id="btn-right">▶</div>
+  </div>
+  <div class="mobile-btn" id="btn-jump">▲</div>
+</div>
+
+<script src="js/game.js?v=20260815-1815"></script>
+</body>
+</html>
