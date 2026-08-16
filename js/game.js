@@ -46,8 +46,8 @@ const SPRITE_CONFIG = {
 const AUDIO_CONFIG = {
   selectPlayer: { src: 'assets/select-player.mp3', loop: true,  volume: 0.6 },
   gameStart:    { src: 'assets/game-start.mp3',    loop: false, volume: 0.7 },
-  gameAdventure:{ src: 'assets/game-adventure.mp3', loop: true,  volume: 0.6 },
-  death:        { src: 'assets/death.mp3',         loop: false, volume: 0.4 },
+  gameAdventure:{ src: 'assets/game-adventure.mp3', loop: true,  volume: 0.5 },
+  death:        { src: 'assets/death.mp3',         loop: false, volume: 0.8 },
   fail:         { src: 'assets/fail.mp3',          loop: false, volume: 0.8 },
   jump:         { src: 'assets/jump.mp3',          loop: false, volume: 0.25 },
   stomp:        { src: 'assets/stomp.mp3',         loop: false, volume: 0.35 },
@@ -694,9 +694,9 @@ let enemies = [];
 // ============================================================
 function createCoins() {
   const coins = [];
-  const pos = [    [4,12],[5,12],[6,12],[11,11],[12,11],[17,10],[18,10],[29,9],[30,9],[31,9]
+  const pos = [    [4,12],[5,12],[6,12],[11,11],[12,11],[17,10],[18,7],[29,9],[30,9],[31,9]
     ,[36,10],[37,10],[41,9],[42,9],[51,8],[52,8],[53,8],[58,10],[59,10],[63,8]
-    ,[64,8],[69,10],[73,7],[74,7],[75,7],[79,9],[80,9],[84,8],[85,8],[89,10]
+    ,[64,3],[69,10],[73,7],[74,7],[75,7],[79,9],[80,9],[84,8],[85,8],[89,10]
     ,[93,6],[94,6],[95,6],[99,9],[100,9],[104,7],[105,7],[109,9],[113,6],[114,6]
     ,[115,6],[6,9],[7,9],[13,8],[19,7],[26,8],[27,8],[33,6],[34,6],[39,7]
     ,[40,7],[45,5],[46,5],[47,5],[53,7],[54,7],[59,4],[60,4],[65,6],[66,6]
