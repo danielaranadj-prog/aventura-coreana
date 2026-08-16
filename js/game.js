@@ -1,4 +1,5 @@
-// ============================================================
+
+game_js = '''// ============================================================
 // CONFIGURACIÓN DE SPRITES
 // ============================================================
 const SPRITE_CONFIG = {
@@ -421,16 +422,14 @@ class Animator {
 let animator = null;
 
 // ============================================================
-// MAPA — PLATAFORMAS MÁS BAJAS
+// MAPA
 // ============================================================
 const LEVEL_WIDTH = 120;
 const LEVEL_HEIGHT = 20;
 
 // ============================================================
-// CARGA DE NIVEL DESDE JSON (Sprite Fusion / Tiled)
+// CARGA DE NIVEL DESDE JSON
 // ============================================================
-// Mapeo de IDs del tileset → IDs del juego
-// Ajusta estos números según el orden de tiles en tu tileset
 const TILE_MAP = {
   0: 1,   // suelo
   1: 2,   // plataforma
@@ -456,7 +455,6 @@ async function loadLevelFromJSON(url) {
       for (let x = 0; x < w; x++) map[y][x] = 0;
     }
 
-    // Sprite Fusion exporta capas con array de tiles
     if (data.layers) {
       data.layers.forEach(layer => {
         if (layer.tiles) {
@@ -467,14 +465,13 @@ async function loadLevelFromJSON(url) {
             }
           });
         }
-        // Tiled exporta capas con array de datos
         if (layer.data && layer.width) {
           for (let i = 0; i < layer.data.length; i++) {
             const tileId = layer.data[i];
             if (tileId > 0) {
               const tx = i % layer.width;
               const ty = Math.floor(i / layer.width);
-              const gameId = TILE_MAP[tileId - 1]; // Tiled usa 1-based
+              const gameId = TILE_MAP[tileId - 1];
               if (gameId !== undefined && ty < h && tx < w) {
                 map[ty][tx] = gameId;
               }
@@ -494,21 +491,62 @@ async function loadLevelFromJSON(url) {
   }
 }
 
+// ============================================================
+// GENERACIÓN PROCEDURAL DE NIVEL CON HUECOS Y ESCALERAS
+// ============================================================
 function generateLevel() {
   const map = [];
   for (let y = 0; y < LEVEL_HEIGHT; y++) {
     map[y] = [];
     for (let x = 0; x < LEVEL_WIDTH; x++) map[y][x] = 0;
   }
-  for (let x = 0; x < LEVEL_WIDTH; x++) {
-    map[LEVEL_HEIGHT - 1][x] = 1;
-    map[LEVEL_HEIGHT - 2][x] = 1;
+
+  // Generar suelo con huecos
+  const gaps = [];
+  const gapCount = 4; // 3-6 huecos, promedio 4
+  const safeStart = 10;
+  const safeEnd = LEVEL_WIDTH - 10;
+
+  for (let i = 0; i < gapCount; i++) {
+    let attempts = 0;
+    let placed = false;
+    while (attempts < 50 && !placed) {
+      const gx = safeStart + Math.floor(Math.random() * (safeEnd - safeStart - 4));
+      const gw = 2 + Math.floor(Math.random() * 3); // 2-4 tiles de ancho
+
+      // Verificar que no se solape con huecos existentes
+      let overlaps = false;
+      for (const g of gaps) {
+        if (gx < g.x + g.w + 2 && gx + gw + 2 > g.x) {
+          overlaps = true; break;
+        }
+      }
+      if (!overlaps) {
+        gaps.push({ x: gx, w: gw });
+        placed = true;
+      }
+      attempts++;
+    }
   }
+
+  // Dibujar suelo (tile=1) respetando huecos
+  for (let x = 0; x < LEVEL_WIDTH; x++) {
+    let inGap = false;
+    for (const g of gaps) {
+      if (x >= g.x && x < g.x + g.w) { inGap = true; break; }
+    }
+    if (!inGap) {
+      map[LEVEL_HEIGHT - 1][x] = 1;
+      map[LEVEL_HEIGHT - 2][x] = 1;
+    }
+  }
+
   function plat(x, y, w, t = 2) {
     for (let i = 0; i < w; i++) if (x + i < LEVEL_WIDTH) map[y][x + i] = t;
   }
 
-  // Plataformas rediseñadas — más bajas y accesibles
+  // Plataformas azules (tile=2) subidas 3-4 tiles sobre suelo (y entre 14 y 11)
+  // NUNCA tocando el suelo (y=18-19)
   plat(3, 14, 4);   plat(10, 13, 3);  plat(16, 11, 2, 3); plat(22, 13, 3);
   plat(28, 11, 4);  plat(35, 11, 2, 3); plat(40, 11, 3);  plat(46, 13, 2);
   plat(50, 10, 4);  plat(57, 11, 2, 3); plat(62, 10, 3);  plat(68, 12, 2);
@@ -518,7 +556,7 @@ function generateLevel() {
   plat(25, 10, 2);  plat(32, 8, 4);   plat(38, 8, 2, 3); plat(44, 7, 3);
   plat(52, 9, 2);   plat(58, 6, 4);   plat(64, 7, 2, 3); plat(70, 6, 3);
 
-  // Escaleras de rescate — si caes al suelo puedes volver a subir
+  // Escaleras de rescate
   plat(55, 16, 3);  plat(58, 15, 2);  plat(60, 14, 2);
   plat(105, 16, 3); plat(108, 15, 2); plat(110, 14, 2);
 
@@ -528,6 +566,7 @@ function generateLevel() {
   map[LEVEL_HEIGHT - 8][LEVEL_WIDTH - 5] = 5;
   map[LEVEL_HEIGHT - 9][LEVEL_WIDTH - 5] = 5;
   map[LEVEL_HEIGHT - 6][LEVEL_WIDTH - 4] = 5;
+
   return map;
 }
 let levelMap = generateLevel();
@@ -551,23 +590,101 @@ const player = {
 };
 
 // ============================================================
-// ENEMIGOS
+// ENEMIGOS ALEATORIOS CON TIPOS Y DIFICULTAD PROGRESIVA
 // ============================================================
 function createEnemies() {
-  return [
-    {x:250,y:GROUND_Y-28,w:28,h:28,vx:1.2,type:'goomba',dead:false},
-    {x:450,y:GROUND_Y-28,w:28,h:28,vx:-1.2,type:'goomba',dead:false},
-    {x:700,y:GROUND_Y-28,w:28,h:28,vx:1.2,type:'goomba',dead:false},
-    {x:1000,y:GROUND_Y-28,w:28,h:28,vx:-1.2,type:'goomba',dead:false},
-    {x:1300,y:GROUND_Y-28,w:28,h:28,vx:1.2,type:'goomba',dead:false},
-    {x:1600,y:GROUND_Y-28,w:28,h:28,vx:-1.2,type:'goomba',dead:false},
-    {x:1900,y:GROUND_Y-28,w:28,h:28,vx:1.2,type:'goomba',dead:false},
-    {x:2200,y:GROUND_Y-28,w:28,h:28,vx:-1.2,type:'goomba',dead:false},
-    {x:2500,y:GROUND_Y-28,w:28,h:28,vx:1.2,type:'goomba',dead:false},
-    {x:2800,y:GROUND_Y-28,w:28,h:28,vx:-1.2,type:'goomba',dead:false},
-    {x:3100,y:GROUND_Y-28,w:28,h:28,vx:1.2,type:'goomba',dead:false},
-    {x:3400,y:GROUND_Y-28,w:28,h:28,vx:-1.2,type:'goomba',dead:false},
-  ];
+  const enemies = [];
+  const count = 12 + Math.floor(Math.random() * 9); // 12-20 enemigos
+
+  const types = ['goomba', 'big', 'fast', 'fly', 'hunter'];
+
+  for (let i = 0; i < count; i++) {
+    const tileX = 15 + Math.floor(Math.random() * (LEVEL_WIDTH - 25));
+    const x = tileX * TILE;
+
+    // Determinar tipos disponibles según dificultad progresiva
+    let availableTypes = [];
+    if (tileX < 40) {
+      // Primer tercio: solo normales y rápidos
+      availableTypes = ['goomba', 'fast'];
+    } else if (tileX < 80) {
+      // Segundo tercio: normales, rápidos, grandes, cazadores
+      availableTypes = ['goomba', 'big', 'fast', 'hunter'];
+    } else {
+      // Último tercio: todos
+      availableTypes = ['goomba', 'big', 'fast', 'fly', 'hunter'];
+    }
+
+    // Probabilidades por tipo
+    let type;
+    const rand = Math.random();
+    if (rand < 0.40) type = 'goomba';
+    else if (rand < 0.60) type = 'big';
+    else if (rand < 0.80) type = 'fast';
+    else if (rand < 0.90) type = 'fly';
+    else type = 'hunter';
+
+    // Si el tipo no está disponible en esta zona, elegir uno que sí
+    if (!availableTypes.includes(type)) {
+      type = availableTypes[Math.floor(Math.random() * availableTypes.length)];
+    }
+
+    // Configuración según tipo
+    let w, h, vx, vy = 0, startY;
+    let canStomp = true;
+    let color, eyeColor, hornColor;
+
+    switch (type) {
+      case 'goomba':
+        w = 28; h = 28;
+        vx = 1.0 + Math.random() * 0.5; // 1.0-1.5
+        startY = GROUND_Y - 28;
+        color = '#dc143c'; eyeColor = '#ffff00'; hornColor = '#8b0000';
+        break;
+      case 'big':
+        w = 44; h = 44;
+        vx = 0.6 + Math.random() * 0.3; // 0.6-0.9
+        startY = GROUND_Y - 44;
+        canStomp = false;
+        color = '#8b0000'; eyeColor = '#ffcc00'; hornColor = '#4a0000';
+        break;
+      case 'fast':
+        w = 22; h = 22;
+        vx = 2.0 + Math.random() * 0.8; // 2.0-2.8
+        startY = GROUND_Y - 22;
+        color = '#00ffff'; eyeColor = '#ffffff'; hornColor = '#008b8b';
+        break;
+      case 'fly':
+        w = 28; h = 28;
+        vx = 1.0;
+        startY = GROUND_Y - 80 - Math.random() * 60; // Volando
+        color = '#ff69b4'; eyeColor = '#00ffff'; hornColor = '#ff00ff';
+        break;
+      case 'hunter':
+        w = 28; h = 28;
+        vx = 1.0;
+        startY = GROUND_Y - 28;
+        color = '#9932cc'; eyeColor = '#ff00ff'; hornColor = '#4b0082';
+        break;
+    }
+
+    // Dirección aleatoria
+    if (Math.random() < 0.5) vx = -vx;
+
+    enemies.push({
+      x, y: startY, w, h, vx, vy,
+      type, dead: false,
+      canStomp,
+      color, eyeColor, hornColor,
+      // Propiedades específicas
+      baseY: startY,           // Para voladores (onda senoidal)
+      flyPhase: Math.random() * Math.PI * 2,
+      huntSpeed: 2.5,          // Velocidad de cazador al perseguir
+      originalVx: vx,          // Guardar velocidad original
+    });
+  }
+
+  return enemies;
 }
 let enemies = [];
 
@@ -586,8 +703,8 @@ function createCoins() {
     [59,5],[60,5],[65,7],[66,7],[71,5],[72,5],
   ];
 
-  // Solo 3 prispas en posiciones estratégicas
-  const prispasIndices = [6, 20, 40]; // índices en el array pos
+  // Solo 3 prispas en índices [6, 20, 40]
+  const prispasIndices = [6, 20, 40];
 
   pos.forEach(([cx, cy], index) => {
     const isPrispas = prispasIndices.includes(index);
@@ -840,7 +957,12 @@ function updatePlayer() {
     }
   }
 
-  if (player.y > LEVEL_HEIGHT * TILE + 200) playerDie();
+  // Muerte por caer en hueco
+  if (player.y > LEVEL_HEIGHT * TILE + 50) {
+    playerDie(true); // true = death by falling (gap)
+    return;
+  }
+
   if (player.invincible > 0) player.invincible--;
 
   const hasInput = isKeyDown('ArrowLeft') || isKeyDown('KeyA') ||
@@ -859,24 +981,62 @@ function updateEnemies() {
   enemies.forEach(e => {
     if (e.dead) return;
 
-    e.x += e.vx;
+    // Lógica de movimiento según tipo
+    if (e.type === 'fly') {
+      // Movimiento en onda senoidal vertical
+      e.flyPhase += 0.05;
+      e.y = e.baseY + Math.sin(e.flyPhase) * 40;
+      e.x += e.vx;
+    } else if (e.type === 'hunter') {
+      // Detectar jugador a menos de 120px horizontalmente
+      const distX = Math.abs(player.x - e.x);
+      const sameLevel = Math.abs(player.y - e.y) < 100;
+      if (distX < 120 && sameLevel) {
+        // Perseguir al jugador
+        const dir = player.x > e.x ? 1 : -1;
+        e.vx = dir * e.huntSpeed;
+      } else {
+        // Volver a velocidad normal
+        if (Math.abs(e.vx) > Math.abs(e.originalVx)) {
+          e.vx = e.originalVx;
+        } else {
+          e.x += e.vx;
+        }
+      }
+      if (distX < 120 && sameLevel) {
+        e.x += e.vx;
+      } else {
+        e.x += e.vx;
+      }
+    } else {
+      e.x += e.vx;
+    }
 
+    // Rebote en bordes del nivel
     if (e.x <= 0 || e.x + e.w >= LEVEL_WIDTH * TILE) {
       e.vx *= -1;
       e.x = Math.max(0, Math.min(e.x, LEVEL_WIDTH * TILE - e.w));
+      if (e.type === 'hunter') e.originalVx = e.vx;
       return;
     }
 
-    const frontX = e.x + (e.vx > 0 ? e.w : 0);
-    const groundAhead = getTile(frontX, e.y + e.h + 4);
-    const wallAhead = getTile(frontX, e.y + e.h / 2);
+    // Lógica de suelo/pared solo para enemigos que caminan
+    if (e.type !== 'fly') {
+      const frontX = e.x + (e.vx > 0 ? e.w : 0);
+      const groundAhead = getTile(frontX, e.y + e.h + 4);
+      const wallAhead = getTile(frontX, e.y + e.h / 2);
 
-    if (!isSolid(groundAhead) || isSolid(wallAhead)) {
-      e.vx *= -1;
+      if ((!isSolid(groundAhead) && e.type !== 'fly') || isSolid(wallAhead)) {
+        e.vx *= -1;
+        if (e.type === 'hunter') e.originalVx = e.vx;
+      }
     }
 
+    // Colisión con jugador
     if (rectIntersect(player, e) && player.invincible <= 0) {
-      if (player.vy > 0 && player.y + player.h < e.y + e.h / 2) {
+      const stompFromAbove = player.vy > 0 && player.y + player.h < e.y + e.h / 2 + 8;
+      if (stompFromAbove && e.canStomp) {
+        // Aplastar enemigo
         e.dead = true;
         player.vy = JUMP_FORCE * 0.7;
         score += 200;
@@ -884,6 +1044,7 @@ function updateEnemies() {
         updateUI();
         audioManager.play('stomp');
       } else {
+        // Morir por enemigo grande o no-aplastable
         playerDie();
       }
     }
@@ -923,13 +1084,24 @@ function updateParticles() {
   }
 }
 
-function playerDie() {
+function playerDie(fellInGap = false) {
   if (player.invincible > 0) return;
   lives--; updateUI();
   spawnParticles(player.x + player.w / 2, player.y + player.h / 2, '#ff0040', 20);
   audioManager.play('death');
   if (lives <= 0) gameOver();
-  else { player.invincible = 120; player.vy = JUMP_FORCE; player.x = Math.max(64, player.x - 200); player.y = 200; }
+  else {
+    player.invincible = 120;
+    player.vy = JUMP_FORCE;
+    player.x = Math.max(64, player.x - 200);
+    // Si cayó en hueco, respawnear en suelo seguro
+    if (fellInGap) {
+      player.y = GROUND_Y - player.h;
+      player.vy = 0;
+    } else {
+      player.y = 200;
+    }
+  }
 }
 
 // ============================================================
@@ -939,6 +1111,181 @@ function updateCamera() {
   const targetX = player.x - canvas.width / 3;
   cameraX += (targetX - cameraX) * 0.1;
   cameraX = Math.max(0, Math.min(cameraX, LEVEL_WIDTH * TILE - canvas.width));
+}
+
+// ============================================================
+// DIBUJAR ENEMIGOS POR TIPO (formas geométricas)
+// ============================================================
+function drawEnemy(e) {
+  if (e.dead) return;
+  const cx = e.x + e.w / 2;
+  const cy = e.y + e.h / 2;
+  const r = e.w / 2;
+
+  ctx.save();
+
+  // Cuerpo base según tipo
+  if (e.type === 'big') {
+    // Grande: círculo más grande, color oscuro
+    ctx.fillStyle = e.color;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+    // Borde grueso
+    ctx.strokeStyle = '#4a0000';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    // Cuernos grandes
+    ctx.fillStyle = e.hornColor;
+    ctx.beginPath();
+    ctx.moveTo(e.x + 8, e.y + 6); ctx.lineTo(e.x - 2, e.y - 8); ctx.lineTo(e.x + 14, e.y + 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(e.x + e.w - 8, e.y + 6); ctx.lineTo(e.x + e.w + 2, e.y - 8); ctx.lineTo(e.x + e.w - 14, e.y + 2);
+    ctx.fill();
+    // Ojos amarillos
+    const eyeOffset = e.vx > 0 ? 5 : -5;
+    ctx.fillStyle = e.eyeColor;
+    ctx.shadowColor = e.eyeColor;
+    ctx.shadowBlur = 6;
+    ctx.beginPath(); ctx.arc(cx - 8 + eyeOffset, cy - 2, 5, 0, Math.PI * 2); ctx.arc(cx + 8 + eyeOffset, cy - 2, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Pupilas rojas
+    ctx.fillStyle = '#ff0000';
+    ctx.beginPath(); ctx.arc(cx - 8 + eyeOffset + (e.vx > 0 ? 1 : -1), cy - 2, 2.5, 0, Math.PI * 2); ctx.arc(cx + 8 + eyeOffset + (e.vx > 0 ? 1 : -1), cy - 2, 2.5, 0, Math.PI * 2); ctx.fill();
+    // Ceño de enemigo grande (no se puede aplastar)
+    ctx.strokeStyle = '#ff0000';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(cx - 10, cy - 10); ctx.lineTo(cx + 10, cy - 10);
+    ctx.stroke();
+
+  } else if (e.type === 'fast') {
+    // Rápido: forma ovalada/apuntada, color cyan
+    ctx.fillStyle = e.color;
+    ctx.beginPath();
+    // Forma de gota/ovalo apuntando hacia donde mira
+    const dir = e.vx > 0 ? 1 : -1;
+    ctx.ellipse(cx, cy, r * 1.1, r * 0.85, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Líneas de velocidad
+    ctx.strokeStyle = '#008b8b';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(cx - r * dir, cy - 4); ctx.lineTo(cx - r * dir - 8 * dir, cy - 4);
+    ctx.moveTo(cx - r * dir, cy + 4); ctx.lineTo(cx - r * dir - 8 * dir, cy + 4);
+    ctx.stroke();
+    // Ojos blancos brillantes
+    const eyeOffset = e.vx > 0 ? 4 : -4;
+    ctx.fillStyle = e.eyeColor;
+    ctx.shadowColor = e.eyeColor;
+    ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.arc(cx - 5 + eyeOffset, cy - 1, 3.5, 0, Math.PI * 2); ctx.arc(cx + 5 + eyeOffset, cy - 1, 3.5, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Pupilas cyan oscuro
+    ctx.fillStyle = '#008b8b';
+    ctx.beginPath(); ctx.arc(cx - 5 + eyeOffset + (e.vx > 0 ? 0.8 : -0.8), cy - 1, 1.5, 0, Math.PI * 2); ctx.arc(cx + 5 + eyeOffset + (e.vx > 0 ? 0.8 : -0.8), cy - 1, 1.5, 0, Math.PI * 2); ctx.fill();
+
+  } else if (e.type === 'fly') {
+    // Volador: círculo con alas
+    ctx.fillStyle = e.color;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+    // Alas animadas
+    const wingFlap = Math.sin(Date.now() / 100) * 8;
+    ctx.fillStyle = 'rgba(255, 105, 180, 0.6)';
+    ctx.beginPath();
+    ctx.ellipse(cx - r, cy - 4 + wingFlap, 10, 6, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(cx + r, cy - 4 - wingFlap, 10, 6, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    // Cuernitos rosas
+    ctx.fillStyle = e.hornColor;
+    ctx.beginPath();
+    ctx.moveTo(e.x + 6, e.y + 4); ctx.lineTo(e.x + 2, e.y - 4); ctx.lineTo(e.x + 10, e.y + 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(e.x + e.w - 6, e.y + 4); ctx.lineTo(e.x + e.w - 2, e.y - 4); ctx.lineTo(e.x + e.w - 10, e.y + 2);
+    ctx.fill();
+    // Ojos cyan
+    const eyeOffset = e.vx > 0 ? 3 : -3;
+    ctx.fillStyle = e.eyeColor;
+    ctx.shadowColor = e.eyeColor;
+    ctx.shadowBlur = 6;
+    ctx.beginPath(); ctx.arc(cx - 5 + eyeOffset, cy + 2, 3.5, 0, Math.PI * 2); ctx.arc(cx + 5 + eyeOffset, cy + 2, 3.5, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+  } else if (e.type === 'hunter') {
+    // Cazador: forma con picos/púas, color púrpura
+    ctx.fillStyle = e.color;
+    // Cuerpo hexagonal/puntiagudo
+    ctx.beginPath();
+    ctx.moveTo(cx, e.y);           // arriba
+    ctx.lineTo(e.x + e.w, cy - 2); // derecha arriba
+    ctx.lineTo(e.x + e.w, cy + 6); // derecha abajo
+    ctx.lineTo(cx, e.y + e.h);     // abajo
+    ctx.lineTo(e.x, cy + 6);       // izquierda abajo
+    ctx.lineTo(e.x, cy - 2);       // izquierda arriba
+    ctx.closePath();
+    ctx.fill();
+    // Púas en los lados
+    ctx.fillStyle = e.hornColor;
+    ctx.beginPath();
+    ctx.moveTo(e.x, cy); ctx.lineTo(e.x - 6, cy - 4); ctx.lineTo(e.x, cy + 4);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(e.x + e.w, cy); ctx.lineTo(e.x + e.w + 6, cy - 4); ctx.lineTo(e.x + e.w, cy + 4);
+    ctx.fill();
+    // Ojos magenta brillantes
+    const eyeOffset = e.vx > 0 ? 3 : -3;
+    ctx.fillStyle = e.eyeColor;
+    ctx.shadowColor = e.eyeColor;
+    ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.arc(cx - 5 + eyeOffset, cy + 2, 3.5, 0, Math.PI * 2); ctx.arc(cx + 5 + eyeOffset, cy + 2, 3.5, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Pupilas
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(cx - 5 + eyeOffset + (e.vx > 0 ? 0.8 : -0.8), cy + 2, 1.5, 0, Math.PI * 2); ctx.arc(cx + 5 + eyeOffset + (e.vx > 0 ? 0.8 : -0.8), cy + 2, 1.5, 0, Math.PI * 2); ctx.fill();
+    // Indicador de caza: línea roja cuando persigue
+    const distX = Math.abs(player.x - e.x);
+    const sameLevel = Math.abs(player.y - e.y) < 100;
+    if (distX < 120 && sameLevel) {
+      ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(cx, e.y - 6);
+      ctx.lineTo(player.x + player.w / 2, player.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+  } else {
+    // Normal (goomba): círculo rojo con cuernos clásicos
+    ctx.fillStyle = e.color;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+    // Cuernos
+    ctx.fillStyle = e.hornColor;
+    ctx.beginPath();
+    ctx.moveTo(e.x + 6, e.y + 4); ctx.lineTo(e.x + 2, e.y - 2); ctx.lineTo(e.x + 10, e.y + 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(e.x + e.w - 6, e.y + 4); ctx.lineTo(e.x + e.w - 2, e.y - 2); ctx.lineTo(e.x + e.w - 10, e.y + 2);
+    ctx.fill();
+    // Ojos amarillos
+    const eyeOffset = e.vx > 0 ? 4 : -4;
+    ctx.fillStyle = e.eyeColor;
+    ctx.shadowColor = e.eyeColor;
+    ctx.shadowBlur = 6;
+    ctx.beginPath(); ctx.arc(cx - 6 + eyeOffset, cy + 2, 4, 0, Math.PI * 2); ctx.arc(cx + 6 + eyeOffset, cy + 2, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    // Pupilas rojas
+    ctx.fillStyle = '#ff0000';
+    ctx.beginPath(); ctx.arc(cx - 6 + eyeOffset + (e.vx > 0 ? 1 : -1), cy + 2, 2, 0, Math.PI * 2); ctx.arc(cx + 6 + eyeOffset + (e.vx > 0 ? 1 : -1), cy + 2, 2, 0, Math.PI * 2); ctx.fill();
+    // Cejas
+    ctx.strokeStyle = '#4a0000'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(e.x + 4, e.y + 4); ctx.lineTo(e.x + 12, e.y + 6); ctx.moveTo(e.x + e.w - 4, e.y + 4); ctx.lineTo(e.x + e.w - 12, e.y + 6); ctx.stroke();
+  }
+
+  ctx.restore();
 }
 
 // ============================================================
@@ -1030,7 +1377,7 @@ function draw() {
     }
   }
 
-  // Dibujar items y prispas
+  // Dibujar items y prispas (offset ajustado c.y + 2 + bobY)
   coins.forEach(c => {
     if (c.collected) return;
     const bobY = Math.sin(c.bob) * 4;
@@ -1056,28 +1403,8 @@ function draw() {
     }
   });
 
-  enemies.forEach(e => {
-    if (e.dead) return;
-    ctx.fillStyle = '#dc143c';
-    ctx.beginPath(); ctx.arc(e.x + e.w / 2, e.y + e.h / 2, e.w / 2, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#8b0000';
-    ctx.beginPath();
-    ctx.moveTo(e.x + 6, e.y + 4); ctx.lineTo(e.x + 2, e.y - 2); ctx.lineTo(e.x + 10, e.y + 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(e.x + e.w - 6, e.y + 4); ctx.lineTo(e.x + e.w - 2, e.y - 2); ctx.lineTo(e.x + e.w - 10, e.y + 2);
-    ctx.fill();
-    const eyeOffset = e.vx > 0 ? 4 : -4;
-    ctx.fillStyle = '#ffff00';
-    ctx.shadowColor = '#ffff00';
-    ctx.shadowBlur = 6;
-    ctx.beginPath(); ctx.arc(e.x + e.w / 2 - 6 + eyeOffset, e.y + 10, 4, 0, Math.PI * 2); ctx.arc(e.x + e.w / 2 + 6 + eyeOffset, e.y + 10, 4, 0, Math.PI * 2); ctx.fill();
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = '#ff0000';
-    ctx.beginPath(); ctx.arc(e.x + e.w / 2 - 6 + eyeOffset + (e.vx > 0 ? 1 : -1), e.y + 10, 2, 0, Math.PI * 2); ctx.arc(e.x + e.w / 2 + 6 + eyeOffset + (e.vx > 0 ? 1 : -1), e.y + 10, 2, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = '#4a0000'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(e.x + 4, e.y + 4); ctx.lineTo(e.x + 12, e.y + 6); ctx.moveTo(e.x + e.w - 4, e.y + 4); ctx.lineTo(e.x + e.w - 12, e.y + 6); ctx.stroke();
-  });
+  // Dibujar enemigos con formas geométricas distintivas
+  enemies.forEach(e => drawEnemy(e));
 
   particles.forEach(p => { ctx.globalAlpha = p.life / 50; ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size); });
   ctx.globalAlpha = 1;
@@ -1146,8 +1473,11 @@ function startGame() {
   document.getElementById('gameover-screen').classList.add('hidden');
   document.getElementById('win-screen').classList.add('hidden');
   document.getElementById('menu-button').classList.remove('hidden');
-  const mc = document.getElementById('mobile-controls'); mc.classList.remove('hidden'); mc.style.display = 'flex';
+  const mc = document.getElementById('mobile-controls');
+  mc.classList.remove('hidden');
+  mc.style.display = 'flex';
   document.getElementById('game-wrapper').classList.add('mobile-mode');
+
   score = 0; lives = 3; timeLeft = 300; cameraX = 0; prispasCollected = 0;
   player.x = 64; player.y = GROUND_Y - player.h; player.vx = 0; player.vy = 0; player.invincible = 0;
   player.onGround = true;
@@ -1186,7 +1516,9 @@ function returnToMenu() {
   document.getElementById('gameover-screen').classList.add('hidden');
   document.getElementById('win-screen').classList.add('hidden');
   document.getElementById('menu-button').classList.add('hidden');
-  const mc2 = document.getElementById('mobile-controls'); mc2.classList.add('hidden'); mc2.style.display = 'none';
+  const mc2 = document.getElementById('mobile-controls');
+  mc2.classList.add('hidden');
+  mc2.style.display = 'none';
   document.getElementById('game-wrapper').classList.remove('mobile-mode');
   document.getElementById('start-screen').classList.remove('hidden');
   audioManager.stopAll();
@@ -1199,7 +1531,9 @@ function gameOver() {
   if (timerInterval) clearInterval(timerInterval);
   document.getElementById('final-score').textContent = score;
   document.getElementById('gameover-screen').classList.remove('hidden');
-  const mc2 = document.getElementById('mobile-controls'); mc2.classList.add('hidden'); mc2.style.display = 'none';
+  const mc2 = document.getElementById('mobile-controls');
+  mc2.classList.add('hidden');
+  mc2.style.display = 'none';
   document.getElementById('game-wrapper').classList.remove('mobile-mode');
   audioManager.stopAll();
   audioManager.play('fail');
@@ -1215,7 +1549,9 @@ function winGame() {
   drawWinCharacter(); requestAnimationFrame(updateWinPreview);
   document.getElementById('win-score').textContent = score;
   document.getElementById('win-screen').classList.remove('hidden');
-  const mc2 = document.getElementById('mobile-controls'); mc2.classList.add('hidden'); mc2.style.display = 'none';
+  const mc2 = document.getElementById('mobile-controls');
+  mc2.classList.add('hidden');
+  mc2.style.display = 'none';
   document.getElementById('game-wrapper').classList.remove('mobile-mode');
   spawnParticles(player.x + player.w / 2, player.y, '#ffd700', 30);
   audioManager.stopAll();
