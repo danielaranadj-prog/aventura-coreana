@@ -1681,71 +1681,36 @@ function updateMenuPreview() {
 
 
 function drawWinCharacter() {
-
   const preview = document.getElementById('win-character-preview');
-
   const spriteData = spriteLoader.get('celebrate');
-
   if (!preview || !spriteData) return;
 
   const previewCtx = preview.getContext('2d');
 
-
-
   const col = winPreviewFrame % spriteData.cols;
-
   const row = Math.floor(winPreviewFrame / spriteData.cols);
 
-
-
   const fw = spriteData.frameWidth;
-
   const fh = spriteData.frameHeight;
-
   const aspect = fw / fh;
 
-
-
-  // Llenar el canvas manteniendo proporción (canvas ahora 120x200)
-
-  const maxW = preview.width - 8;   // 112
-
-  const maxH = preview.height - 8;  // 192
-
-
+  // Canvas cuadrado 120x120 con círculo
+  const canvasSize = preview.width;
+  const padding = 10;
+  const maxH = canvasSize - padding * 2;
 
   let dh = maxH;
-
   let dw = dh * aspect;
 
-  if (dw > maxW) {
-
-    dw = maxW;
-
-    dh = dw / aspect;
-
-  }
-
-
-
-  previewCtx.clearRect(0, 0, preview.width, preview.height);
-
+  previewCtx.clearRect(0, 0, canvasSize, canvasSize);
   previewCtx.imageSmoothingEnabled = false;
-
   previewCtx.drawImage(
-
     spriteData.image,
-
     col * fw, row * fh,
-
     fw, fh,
-
-    (preview.width - dw) / 2, (preview.height - dh) / 2,
-
+    (canvasSize - dw) / 2, (canvasSize - dh) / 2,
     dw, dh
-
   );
-
 }
 
 
