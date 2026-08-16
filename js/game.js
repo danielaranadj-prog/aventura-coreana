@@ -502,6 +502,7 @@ let timeLeft = 300;
 let cameraX = 0;
 
 let timerInterval = null;
+let animationFrameId = null;
 
 let selectedCharacter = 'tomy';
 
@@ -621,7 +622,7 @@ class SpriteLoader {
 
         document.getElementById('start-screen').classList.remove('hidden');
 
-        gameState = 'menu';
+        if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = null; gameState = 'menu';
 
         audioManager.init();
 
@@ -657,7 +658,7 @@ class SpriteLoader {
 
         document.getElementById('start-screen').classList.remove('hidden');
 
-        gameState = 'menu';
+        if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = null; gameState = 'menu';
 
         audioManager.init();
 
@@ -3010,7 +3011,7 @@ function startGame() {
 
   levelMap = generateLevel(); enemies = createEnemies(); coins = createCoins(); particles = [];
 
-  gameState = 'playing'; updateUI(); startTimer(); gameLoop();
+  if (animationFrameId) cancelAnimationFrame(animationFrameId); gameState = 'playing'; updateUI(); startTimer(); animationFrameId = requestAnimationFrame(gameLoop);
 
 
 
@@ -3068,7 +3069,7 @@ function returnToMenu() {
 
   player.vx = 0; player.vy = 0; player.celebrating = false; player.celebrateTimer = 0;
 
-  gameState = 'menu';
+  if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = null; gameState = 'menu';
 
   document.getElementById('gameover-screen').classList.add('hidden');
 
@@ -3098,7 +3099,7 @@ function returnToMenu() {
 
 function gameOver() {
 
-  gameState = 'gameover';
+  if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = null; gameState = 'gameover';
 
   if (timerInterval) clearInterval(timerInterval);
 
@@ -3124,7 +3125,7 @@ function gameOver() {
 
 function winGame() {
 
-  gameState = 'win';
+  if (animationFrameId) cancelAnimationFrame(animationFrameId); animationFrameId = null; gameState = 'win';
 
   if (timerInterval) clearInterval(timerInterval);
 
@@ -3173,7 +3174,7 @@ function gameLoop() {
 
   updatePlayer(); updateEnemies(); updateCoins(); updateParticles(); updateCamera(); draw();
 
-  requestAnimationFrame(gameLoop);
+  animationFrameId = requestAnimationFrame(gameLoop);
 
 }
 

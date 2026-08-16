@@ -386,13 +386,14 @@
   .hidden { display: none !important; }
 
   /* ===== PANTALLA DE CARGA ===== */
+  /* ===== PANTALLA DE CARGA / PORTADA ===== */
   #loading {
     position: absolute;
     inset: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-end;
     background: #0d0221;
     z-index: 50;
     overflow: hidden;
@@ -402,13 +403,22 @@
     inset: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    opacity: 0.75;
+    object-fit: contain;
+    object-position: center top;
+    opacity: 1;
+    image-rendering: auto;
+    -webkit-image-rendering: auto;
   }
   .loading-darken {
     position: absolute;
     inset: 0;
-    background: linear-gradient(to bottom, rgba(13,2,33,0.45), rgba(13,2,33,0.75));
+    background: linear-gradient(
+      to bottom,
+      rgba(13,2,33,0.10) 0%,
+      rgba(13,2,33,0.20) 50%,
+      rgba(13,2,33,0.85) 85%,
+      rgba(13,2,33,0.98) 100%
+    );
     z-index: 1;
   }
   .loading-overlay {
@@ -417,48 +427,76 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 18px;
-    padding: 30px;
+    gap: 14px;
+    padding: 28px 24px calc(28px + env(safe-area-inset-bottom));
+    width: 100%;
+    max-width: 380px;
   }
   .loading-title {
-    font-size: 22px;
+    font-size: 26px;
     font-weight: 900;
-    letter-spacing: 4px;
+    letter-spacing: 5px;
     color: #ffd700;
-    text-shadow: 0 0 15px rgba(255,215,0,0.8), 0 0 40px rgba(255,0,255,0.4);
+    text-shadow:
+      0 0 12px rgba(255,215,0,0.9),
+      0 0 30px rgba(255,0,255,0.5),
+      0 2px 4px rgba(0,0,0,0.8);
     animation: arcadePulse 2s ease-in-out infinite;
   }
   .loading-sub {
-    font-size: 12px;
+    font-size: 11px;
     color: #00ffff;
-    letter-spacing: 6px;
+    letter-spacing: 7px;
     text-transform: uppercase;
-    text-shadow: 0 0 10px rgba(0,255,255,0.5);
+    text-shadow: 0 0 12px rgba(0,255,255,0.7), 0 1px 3px rgba(0,0,0,0.8);
+    font-weight: 700;
+  }
+  .loading-bar-wrap {
+    width: 100%;
+    max-width: 260px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
   }
   .loading-bar {
-    width: 220px;
-    height: 10px;
-    background: rgba(255,255,255,0.08);
-    border: 2px solid rgba(255,0,255,0.4);
-    border-radius: 5px;
+    width: 100%;
+    height: 8px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,0,255,0.35);
+    border-radius: 4px;
     overflow: hidden;
-    box-shadow: 0 0 15px rgba(255,0,255,0.2);
+    box-shadow: 0 0 12px rgba(255,0,255,0.15), inset 0 1px 2px rgba(0,0,0,0.3);
   }
   .loading-fill {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, #ff00ff, #00ffff);
+    background: linear-gradient(90deg, #ff00ff, #00ffff, #ff00ff);
+    background-size: 200% 100%;
     border-radius: 3px;
     transition: width 0.3s ease;
-    box-shadow: 0 0 15px rgba(0,255,255,0.6);
+    box-shadow: 0 0 12px rgba(0,255,255,0.5);
+    animation: loadingShine 1.5s linear infinite;
+  }
+  .loading-percent {
+    font-size: 10px;
+    color: #ff69b4;
+    letter-spacing: 3px;
+    font-weight: 700;
+    text-shadow: 0 0 8px rgba(255,105,180,0.5);
   }
   .loading-blink {
-    font-size: 11px;
+    font-size: 10px;
     color: #00ffff;
-    letter-spacing: 5px;
+    letter-spacing: 6px;
     text-transform: uppercase;
     animation: blink 1s step-end infinite;
     text-shadow: 0 0 10px rgba(0,255,255,0.6);
+    font-weight: 700;
+  }
+  @keyframes loadingShine {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
   }
   @keyframes arcadePulse {
     0%, 100% { transform: scale(1); opacity: 1; }
@@ -540,13 +578,16 @@
   <canvas id="game" width="400" height="640"></canvas>
 
   <div id="loading">
-    <img class="loading-portada" src="assets/portada.jpeg" alt="Boka Aventura">
+    <img class="loading-portada" src="assets/portada.jpeg" alt="Boka Aventura" draggable="false">
     <div class="loading-darken"></div>
     <div class="loading-overlay">
       <div class="loading-title">🕹️ BOKA AVENTURA</div>
       <div class="loading-sub">EXTREME EDITION</div>
-      <div class="loading-bar">
-        <div class="loading-fill" id="loading-fill"></div>
+      <div class="loading-bar-wrap">
+        <div class="loading-bar">
+          <div class="loading-fill" id="loading-fill"></div>
+        </div>
+        <div class="loading-percent" id="loading-percent">0%</div>
       </div>
       <div class="loading-blink">LOADING GAME</div>
     </div>
