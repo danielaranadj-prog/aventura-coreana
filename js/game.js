@@ -1917,7 +1917,15 @@ function updatePlayer() {
 
   // Muerte por caer en hueco
   if (player.y > LEVEL_HEIGHT * TILE + 50) {
-    playerDie(true);
+    // Siempre reposicionar para evitar caída infinita
+    player.x = 64;
+    player.y = GROUND_Y - player.h + 2;
+    player.vy = 0;
+    player.vx = 0;
+    player.onGround = true;
+    if (player.invincible <= 0) {
+      playerDie(true);
+    }
     return;
   }
 
@@ -2205,7 +2213,7 @@ function playerDie(fellInGap = false) {
 
     if (fellInGap) {
 
-      player.y = GROUND_Y - player.h;
+      player.y = GROUND_Y - player.h + 2;
 
       player.vy = 0;
 

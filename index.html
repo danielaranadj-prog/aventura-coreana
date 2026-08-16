@@ -78,121 +78,197 @@
   }
   #menu-button:active { background: #4a1a6b; }
 
-  /* ===== CONTROLES MÓVILES ESTILO SNES ===== */
+  /* ===== CONTROLES MÓVILES ESTILO ARCADE ===== */
 
   /* Modo móvil: reserva espacio inferior para controles */
   #game-wrapper.mobile-mode {
-    padding-bottom: 155px;
+    padding-bottom: 170px;
   }
   #game-wrapper.mobile-mode canvas {
     flex: 1;
     height: auto;
   }
   #mobile-controls {
-    position: absolute; /* dentro del wrapper, no fixed */
+    position: absolute;
     bottom: 0;
     left: 0; right: 0;
     justify-content: space-between;
     align-items: flex-end;
-    padding: 10px 14px calc(12px + env(safe-area-inset-bottom));
+    padding: 10px 16px calc(14px + env(safe-area-inset-bottom));
     z-index: 999;
     pointer-events: none;
   }
 
-
-  /* D-Pad */
+  /* ===== D-PAD ARCADE ===== */
   .dpad {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 3px;
+    gap: 4px;
     pointer-events: auto;
   }
   .dpad-row {
     display: flex;
     align-items: center;
-    gap: 3px;
+    gap: 4px;
   }
   .dpad-btn {
-    width: 50px;
-    height: 50px;
+    width: 54px;
+    height: 54px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 255, 255, 0.12);
-    border: 1.5px solid rgba(0, 255, 255, 0.35);
-    color: rgba(0, 255, 255, 0.8);
-    font-size: 16px;
-    border-radius: 10px;
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
     touch-action: manipulation;
     user-select: none;
     -webkit-user-select: none;
     pointer-events: auto;
-    transition: background 0.08s, transform 0.08s;
-    text-shadow: 0 0 8px rgba(0,255,255,0.4);
+    transition: transform 0.06s, box-shadow 0.1s;
+    position: relative;
+    /* Botón arcade azul/cian con relieve 3D */
+    background: radial-gradient(circle at 35% 35%, #4dd0e1 0%, #00bcd4 40%, #00838f 100%);
+    box-shadow:
+      inset 0 2px 4px rgba(255,255,255,0.4),
+      inset 0 -3px 6px rgba(0,0,0,0.3),
+      0 4px 8px rgba(0,188,212,0.35),
+      0 0 15px rgba(0,188,212,0.2);
+    color: #fff;
+    font-size: 18px;
+    font-weight: 900;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  }
+  .dpad-btn::before {
+    content: '';
+    position: absolute;
+    top: 8%;
+    left: 15%;
+    width: 35%;
+    height: 25%;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at center, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 70%);
+    pointer-events: none;
   }
   .dpad-btn:active {
-    background: rgba(0, 255, 255, 0.35);
-    transform: scale(0.9);
+    transform: scale(0.92) translateY(2px);
+    box-shadow:
+      inset 0 2px 6px rgba(0,0,0,0.4),
+      inset 0 -1px 2px rgba(255,255,255,0.2),
+      0 1px 3px rgba(0,188,212,0.3);
   }
   .dpad-center {
-    width: 50px;
-    height: 50px;
+    width: 54px;
+    height: 54px;
     border-radius: 50%;
-    background: rgba(0, 255, 255, 0.08);
-    border: 1.5px solid rgba(0, 255, 255, 0.2);
+    background: radial-gradient(circle at 35% 35%, #37474f 0%, #263238 60%, #102027 100%);
+    box-shadow:
+      inset 0 1px 3px rgba(255,255,255,0.15),
+      inset 0 -2px 4px rgba(0,0,0,0.4),
+      0 2px 4px rgba(0,0,0,0.3);
+    position: relative;
+  }
+  .dpad-center::before {
+    content: '';
+    position: absolute;
+    top: 10%;
+    left: 18%;
+    width: 30%;
+    height: 20%;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at center, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%);
   }
 
-  /* Botones SNES */
+  /* ===== BOTONES ARCADE A / B ===== */
   .snes-buttons {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
     pointer-events: auto;
   }
   .snes-row {
     display: flex;
-    gap: 18px;
+    gap: 16px;
     align-items: center;
   }
   .snes-btn {
-    width: 56px;
-    height: 56px;
+    width: 64px;
+    height: 64px;
     border-radius: 50%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 0, 255, 0.12);
-    border: 2px solid rgba(255, 0, 255, 0.4);
-    color: rgba(255, 255, 255, 0.85);
-    font-size: 16px;
-    font-weight: 800;
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    border: none;
+    cursor: pointer;
     touch-action: manipulation;
     user-select: none;
     -webkit-user-select: none;
     pointer-events: auto;
-    transition: background 0.08s, transform 0.08s, box-shadow 0.15s;
-    box-shadow: 0 0 15px rgba(255, 0, 255, 0.15);
-    text-shadow: 0 0 8px rgba(255,255,255,0.3);
+    transition: transform 0.06s, box-shadow 0.1s;
+    position: relative;
+    font-size: 20px;
+    font-weight: 900;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  }
+  .snes-btn::before {
+    content: '';
+    position: absolute;
+    top: 10%;
+    left: 18%;
+    width: 32%;
+    height: 22%;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at center, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 70%);
+    pointer-events: none;
   }
   .snes-btn:active {
-    background: rgba(255, 0, 255, 0.35);
-    transform: scale(0.9);
-    box-shadow: 0 0 28px rgba(255, 0, 255, 0.4);
+    transform: scale(0.92) translateY(2px);
   }
+
+  /* Botón A (Saltar) — Rojo arcade */
+  #btn-jump {
+    background: radial-gradient(circle at 35% 35%, #ff5252 0%, #f44336 40%, #b71c1c 100%);
+    box-shadow:
+      inset 0 2px 4px rgba(255,255,255,0.4),
+      inset 0 -3px 6px rgba(0,0,0,0.3),
+      0 5px 10px rgba(244,67,54,0.4),
+      0 0 18px rgba(244,67,54,0.25);
+    color: #fff;
+  }
+  #btn-jump:active {
+    box-shadow:
+      inset 0 2px 6px rgba(0,0,0,0.4),
+      inset 0 -1px 2px rgba(255,255,255,0.2),
+      0 1px 3px rgba(244,67,54,0.3);
+  }
+
+  /* Botón B (Correr) — Verde arcade */
+  #btn-run {
+    background: radial-gradient(circle at 35% 35%, #69f0ae 0%, #4caf50 40%, #1b5e20 100%);
+    box-shadow:
+      inset 0 2px 4px rgba(255,255,255,0.4),
+      inset 0 -3px 6px rgba(0,0,0,0.3),
+      0 5px 10px rgba(76,175,80,0.4),
+      0 0 18px rgba(76,175,80,0.25);
+    color: #fff;
+  }
+  #btn-run:active {
+    box-shadow:
+      inset 0 2px 6px rgba(0,0,0,0.4),
+      inset 0 -1px 2px rgba(255,255,255,0.2),
+      0 1px 3px rgba(76,175,80,0.3);
+  }
+
   .snes-label {
     font-size: 9px;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.65);
     text-align: center;
-    margin-top: 2px;
-    letter-spacing: 1px;
+    margin-top: 3px;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
   }
 
   /* ===== PANTALLAS ===== */
