@@ -2032,8 +2032,13 @@ function updatePlayer() {
 
 
 
- // Muerte por caer en hueco
-  if (player.y > LEVEL_HEIGHT * TILE + 50) {
+ // Muerte por caer en hueco (Reemplaza tu bloque actual por este)
+  const tileBelowLeft = getTile(player.x + 4, player.y + player.h + 2);
+  const tileBelowRight = getTile(player.x + player.w - 4, player.y + player.h + 2);
+  
+  const isOverGap = (tileBelowLeft === 0 && tileBelowRight === 0 && player.y >= GROUND_Y - 10);
+
+  if (player.y > LEVEL_HEIGHT * TILE + 20 || isOverGap) {
     if (player.invincible <= 0) {
       playerDie(true);
     } else {
@@ -2047,8 +2052,8 @@ function updatePlayer() {
     return;
   }
 
-
   if (player.invincible > 0) player.invincible--;
+}
 
 
 
@@ -2075,7 +2080,7 @@ function updatePlayer() {
     animator.update();
 
 }
-}
+
 
 
 
