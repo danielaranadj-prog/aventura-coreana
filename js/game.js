@@ -1145,6 +1145,7 @@ function startGame() {
   document.getElementById('win-screen').classList.add('hidden');
   document.getElementById('menu-button').classList.remove('hidden');
   const mc = document.getElementById('mobile-controls'); mc.classList.remove('hidden'); mc.style.display = 'flex';
+  document.getElementById('game-wrapper').classList.add('mobile-mode');
   score = 0; lives = 3; timeLeft = 300; cameraX = 0; prispasCollected = 0;
   player.x = 64; player.y = GROUND_Y - player.h; player.vx = 0; player.vy = 0; player.invincible = 0;
   player.onGround = true;
@@ -1184,6 +1185,7 @@ function returnToMenu() {
   document.getElementById('win-screen').classList.add('hidden');
   document.getElementById('menu-button').classList.add('hidden');
   const mc2 = document.getElementById('mobile-controls'); mc2.classList.add('hidden'); mc2.style.display = 'none';
+  document.getElementById('game-wrapper').classList.remove('mobile-mode');
   document.getElementById('start-screen').classList.remove('hidden');
   audioManager.stopAll();
   audioManager.playMusic('selectPlayer');
@@ -1196,6 +1198,7 @@ function gameOver() {
   document.getElementById('final-score').textContent = score;
   document.getElementById('gameover-screen').classList.remove('hidden');
   const mc2 = document.getElementById('mobile-controls'); mc2.classList.add('hidden'); mc2.style.display = 'none';
+  document.getElementById('game-wrapper').classList.remove('mobile-mode');
   audioManager.stopAll();
   audioManager.play('fail');
 }
@@ -1211,6 +1214,7 @@ function winGame() {
   document.getElementById('win-score').textContent = score;
   document.getElementById('win-screen').classList.remove('hidden');
   const mc2 = document.getElementById('mobile-controls'); mc2.classList.add('hidden'); mc2.style.display = 'none';
+  document.getElementById('game-wrapper').classList.remove('mobile-mode');
   spawnParticles(player.x + player.w / 2, player.y, '#ffd700', 30);
   audioManager.stopAll();
   audioManager.playVictoryFanfare();
