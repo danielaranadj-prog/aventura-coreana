@@ -850,20 +850,19 @@ function drawWinCharacter() {
   const col = winPreviewFrame % spriteData.cols;
   const row = Math.floor(winPreviewFrame / spriteData.cols);
 
-  // Usar dimensiones del config para evitar deformación
   const fw = spriteData.frameWidth;
   const fh = spriteData.frameHeight;
+  const aspect = fw / fh;
 
-  // Calcular scale automático para llenar el canvas manteniendo proporción
-  const maxW = preview.width - 4;   // 86
-  const maxH = preview.height - 4;  // 146
-  const aspect = fw / fh;           // 408 / 717 = 0.569
+  // Llenar el canvas manteniendo proporción (canvas ahora 120x200)
+  const maxW = preview.width - 8;   // 112
+  const maxH = preview.height - 8;  // 192
 
-  let dh = maxH;          // ajustar a altura primero
-  let dw = dh * aspect;   // 146 * 0.569 = 83
-  if (dw > maxW) {        // si no cabe en el ancho
-    dw = maxW;            // 86
-    dh = dw / aspect;     // 86 / 0.569 = 151
+  let dh = maxH;
+  let dw = dh * aspect;
+  if (dw > maxW) {
+    dw = maxW;
+    dh = dw / aspect;
   }
 
   previewCtx.clearRect(0, 0, preview.width, preview.height);

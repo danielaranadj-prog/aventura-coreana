@@ -408,6 +408,41 @@
       box-shadow: 0 0 50px rgba(255,0,255,0.15);
     }
   }
+  .win-title {
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    font-size: 28px;
+    color: #ffd700;
+    text-shadow: 
+      3px 3px 0 #b8860b,
+      -1px -1px 0 #fff5cc,
+      0 0 20px rgba(255, 215, 0, 0.6);
+    margin-bottom: 4px;
+    letter-spacing: 2px;
+    animation: winPulse 1.5s ease-in-out infinite;
+  }
+  @keyframes winPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+  .win-stars {
+    font-size: 18px;
+    color: #ffd700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+    margin-bottom: 8px;
+    animation: starTwinkle 1s ease-in-out infinite alternate;
+  }
+  @keyframes starTwinkle {
+    from { opacity: 0.5; }
+    to { opacity: 1; }
+  }
+  #win-screen .screen-sub {
+    margin: 8px 0 4px;
+  }
+  #win-screen canvas {
+    margin: 4px auto 8px;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
 </style>
 </head>
 <body>
@@ -460,9 +495,10 @@
   </div>
 
   <div id="win-screen" class="hidden">
-    <div class="screen-title">🏆 ¡VICTORIA!</div>
-    <canvas id="win-character-preview" width="90" height="150" aria-label="TOMY celebrando"></canvas>
+    <div class="win-title">YOU WIN!</div>
+    <div class="win-stars">✦ ✦ ✦</div>
     <div class="screen-sub">Puntuación: <span id="win-score">0</span></div>
+    <canvas id="win-character-preview" width="120" height="200" aria-label="TOMY celebrando"></canvas>
     <button class="btn btn-green" onclick="restartGame()">↻ Jugar de nuevo</button>
     <button class="btn" onclick="returnToMenu()">☰ Menú</button>
   </div>
