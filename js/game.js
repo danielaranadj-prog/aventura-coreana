@@ -72,6 +72,7 @@ const AUDIO_CONFIG = {
   gameAdventure:{ src: 'assets/game-adventure.mp3', loop: true, volume: 0.5 },
   death:        { src: 'assets/death.mp3',         loop: false, volume: 0.8 },
   fail:         { src: 'assets/fail.mp3',          loop: false, volume: 0.8 },
+  jump:         { src: 'assets/jump.mp3',          loop: false, volume: 0.25 },
 };
 
 // ============================================================
@@ -654,6 +655,7 @@ function updatePlayer(){
   if((isKeyDown('ArrowUp')||isKeyDown('KeyW')||isKeyDown('Space'))&&player.onGround){
     player.vy=JUMP_FORCE;player.onGround=false;
     spawnParticles(player.x+player.w/2,player.y+player.h,'#ffd700',5);
+    audioManager.play('jump');
   }
   player.vy+=GRAVITY;
 
