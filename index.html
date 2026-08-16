@@ -19,11 +19,12 @@
   }
   #game-wrapper {
     position: relative;
+    width: min(100vw, 800px);
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 0 50px rgba(220,38,38,0.2), 0 0 100px rgba(220,38,38,0.05);
   }
-  canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
+  canvas { display: block; max-width: 100%; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; }
   #ui-overlay {
     position: absolute;
     top: 0; left: 0; right: 0;
@@ -162,8 +163,8 @@
   .hidden { display: none !important; }
   #mobile-controls {
     display: none;
-    position: fixed;
-    bottom: 20px;
+    position: absolute;
+    bottom: 14px;
     left: 0; right: 0;
     justify-content: space-between;
     padding: 0 20px;
@@ -189,6 +190,10 @@
   @media (max-width: 900px) {
     #mobile-controls { display: flex; }
     #controls-hint { display: none; }
+    #ui-overlay { padding: 8px 12px; font-size: 15px; }
+    #menu-button { top: 40px; right: 10px; }
+    .mobile-btn { width: 58px; height: 58px; font-size: 22px; }
+    .mobile-dpad { gap: 8px; }
   }
   #loading {
     position: absolute;
@@ -264,20 +269,20 @@
     <button class="btn btn-green" onclick="restartGame()">↻ Jugar de nuevo</button>
     <button class="btn" onclick="returnToMenu()">☰ Menú</button>
   </div>
+
+  <div id="mobile-controls">
+    <div class="mobile-dpad">
+      <div class="mobile-btn" id="btn-left">◀</div>
+      <div class="mobile-btn" id="btn-right">▶</div>
+    </div>
+    <div class="mobile-btn" id="btn-jump">▲</div>
+  </div>
 </div>
 
 <div id="controls-hint">
   <kbd>←</kbd> <kbd>→</kbd> o <kbd>A</kbd> <kbd>D</kbd> — Moverse &nbsp;&nbsp;|&nbsp;&nbsp;
   <kbd>↑</kbd> <kbd>W</kbd> o <kbd>Space</kbd> — Saltar &nbsp;&nbsp;|&nbsp;&nbsp;
   <kbd>R</kbd> — Reiniciar
-</div>
-
-<div id="mobile-controls">
-  <div class="mobile-dpad">
-    <div class="mobile-btn" id="btn-left">◀</div>
-    <div class="mobile-btn" id="btn-right">▶</div>
-  </div>
-  <div class="mobile-btn" id="btn-jump">▲</div>
 </div>
 
 <script src="js/game.js?v=20260815-1815"></script>
