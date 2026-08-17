@@ -1178,17 +1178,9 @@ function generateLevel() {
 
 
 
-  // Bandera final
-
-  map[LEVEL_HEIGHT - 6][LEVEL_WIDTH - 5] = 5;
-
-  map[LEVEL_HEIGHT - 7][LEVEL_WIDTH - 5] = 5;
-
-  map[LEVEL_HEIGHT - 8][LEVEL_WIDTH - 5] = 5;
-
-  map[LEVEL_HEIGHT - 9][LEVEL_WIDTH - 5] = 5;
-
-  map[LEVEL_HEIGHT - 6][LEVEL_WIDTH - 4] = 5;
+  // Estructura final (pirámide escalonada) — tiles de colisión al nivel del suelo
+  map[LEVEL_HEIGHT - 3][LEVEL_WIDTH - 5] = 5;
+  map[LEVEL_HEIGHT - 3][LEVEL_WIDTH - 4] = 5;
 
 
 
@@ -2233,9 +2225,9 @@ function updateEnemies() {
 
 function updateCoins() {
 
-  // Dibujar estructura final (pirámide escalonada)
+  // Dibujar estructura final (pirámide escalonada) — base al nivel del suelo
   const finalCenterX = (LEVEL_WIDTH - 5) * TILE + TILE;
-  const finalBaseY = (LEVEL_HEIGHT - 6) * TILE + TILE;
+  const finalBaseY = GROUND_Y;
   drawFinalStructure(ctx, finalCenterX, finalBaseY);
 
   coins.forEach(c => {
@@ -2967,9 +2959,9 @@ function draw() {
 
 
 
-  // Dibujar estructura final (pirámide escalonada)
+  // Dibujar estructura final (pirámide escalonada) — base al nivel del suelo
   const finalCenterX = (LEVEL_WIDTH - 5) * TILE + TILE;
-  const finalBaseY = (LEVEL_HEIGHT - 6) * TILE + TILE;
+  const finalBaseY = GROUND_Y;
   drawFinalStructure(ctx, finalCenterX, finalBaseY);
 
   coins.forEach(c => {
