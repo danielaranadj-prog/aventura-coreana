@@ -2233,6 +2233,11 @@ function updateEnemies() {
 
 function updateCoins() {
 
+  // Dibujar estructura final (pirámide escalonada)
+  const finalCenterX = (LEVEL_WIDTH - 5) * TILE + TILE;
+  const finalBaseY = (LEVEL_HEIGHT - 6) * TILE + TILE;
+  drawFinalStructure(ctx, finalCenterX, finalBaseY);
+
   coins.forEach(c => {
 
     if (c.collected) return;
@@ -2364,6 +2369,155 @@ function updateCamera() {
 }
 
 
+
+// ============================================================
+// ESTRUCTURA FINAL (PIRÁMIDE ESCALONADA)
+// ============================================================
+function drawFinalStructure(ctx, centerX, baseY) {
+  const w = 112;
+  const x = centerX - w / 2;
+
+  // Sombra proyectada en el suelo
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  ctx.beginPath();
+  ctx.ellipse(centerX, baseY + 6, w / 2 + 10, 10, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // --- NIVEL 0: Base ancha (112 x 32) ---
+  ctx.fillStyle = '#c4b088';
+  ctx.fillRect(x, baseY - 32, w, 32);
+  ctx.fillStyle = '#a89070'; // sombra lateral derecha
+  ctx.fillRect(x + w - 14, baseY - 32, 14, 32);
+  ctx.fillStyle = '#e6d5b8'; // borde superior iluminado
+  ctx.fillRect(x, baseY - 34, w, 2);
+  // Líneas de piedra decorativas
+  ctx.fillStyle = 'rgba(0,0,0,0.06)';
+  ctx.fillRect(x + 8, baseY - 24, 20, 2);
+  ctx.fillRect(x + 44, baseY - 18, 24, 2);
+  ctx.fillRect(x + 84, baseY - 26, 16, 2);
+
+  // --- NIVEL 1 (96 x 28) ---
+  ctx.fillStyle = '#d4c4a0';
+  ctx.fillRect(x + 8, baseY - 60, 96, 28);
+  ctx.fillStyle = '#b8a078';
+  ctx.fillRect(x + 90, baseY - 60, 14, 28);
+  ctx.fillStyle = '#e6d5b8';
+  ctx.fillRect(x + 8, baseY - 62, 96, 2);
+  ctx.fillStyle = 'rgba(0,0,0,0.05)';
+  ctx.fillRect(x + 18, baseY - 52, 16, 2);
+  ctx.fillRect(x + 62, baseY - 46, 20, 2);
+
+  // --- NIVEL 2 (80 x 24) ---
+  ctx.fillStyle = '#c4b088';
+  ctx.fillRect(x + 16, baseY - 84, 80, 24);
+  ctx.fillStyle = '#a89070';
+  ctx.fillRect(x + 82, baseY - 84, 14, 24);
+  ctx.fillStyle = '#d4c4a0';
+  ctx.fillRect(x + 16, baseY - 86, 80, 2);
+
+  // --- NIVEL 3 (64 x 22) ---
+  ctx.fillStyle = '#d4c4a0';
+  ctx.fillRect(x + 24, baseY - 106, 64, 22);
+  ctx.fillStyle = '#b8a078';
+  ctx.fillRect(x + 74, baseY - 106, 14, 22);
+  ctx.fillStyle = '#e6d5b8';
+  ctx.fillRect(x + 24, baseY - 108, 64, 2);
+
+  // --- NIVEL 4: Torre central (48 x 28) ---
+  ctx.fillStyle = '#c4b088';
+  ctx.fillRect(x + 32, baseY - 134, 48, 28);
+  ctx.fillStyle = '#a89070';
+  ctx.fillRect(x + 66, baseY - 134, 14, 28);
+  ctx.fillStyle = '#d4c4a0';
+  ctx.fillRect(x + 32, baseY - 136, 48, 2);
+
+  // --- Cúspide (24 x 18) ---
+  ctx.fillStyle = '#e6d5b8';
+  ctx.fillRect(x + 44, baseY - 152, 24, 18);
+  ctx.fillStyle = '#c4b088';
+  ctx.fillRect(x + 62, baseY - 152, 6, 18);
+  ctx.fillStyle = '#d4c4a0';
+  ctx.fillRect(x + 44, baseY - 154, 24, 2);
+
+  // --- Ventanas arqueadas ---
+  const drawWindow = (wx, wy, lit = false) => {
+    ctx.fillStyle = lit ? '#ffd700' : '#3d2b1a';
+    ctx.beginPath();
+    ctx.moveTo(wx, wy + 10);
+    ctx.quadraticCurveTo(wx + 5, wy - 3, wx + 10, wy + 10);
+    ctx.lineTo(wx + 10, wy + 10);
+    ctx.lineTo(wx, wy + 10);
+    ctx.fill();
+    if (lit) {
+      ctx.save();
+      ctx.shadowColor = '#ffd700';
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = '#ffd700';
+      ctx.beginPath();
+      ctx.moveTo(wx + 1, wy + 9);
+      ctx.quadraticCurveTo(wx + 5, wy - 1, wx + 9, wy + 9);
+      ctx.fill();
+      ctx.restore();
+    }
+    // Marco de ventana
+    ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(wx, wy + 10);
+    ctx.quadraticCurveTo(wx + 5, wy - 3, wx + 10, wy + 10);
+    ctx.stroke();
+  };
+
+  // Ventanas nivel 0
+  drawWindow(x + 14, baseY - 30, true);
+  drawWindow(x + 38, baseY - 30, false);
+  drawWindow(x + 62, baseY - 30, true);
+  drawWindow(x + 86, baseY - 30, false);
+
+  // Ventanas nivel 1
+  drawWindow(x + 22, baseY - 56, false);
+  drawWindow(x + 50, baseY - 56, true);
+  drawWindow(x + 78, baseY - 56, false);
+
+  // Ventanas nivel 2
+  drawWindow(x + 30, baseY - 80, true);
+  drawWindow(x + 58, baseY - 80, false);
+
+  // Ventanas nivel 3
+  drawWindow(x + 38, baseY - 102, true);
+  drawWindow(x + 62, baseY - 102, false);
+
+  // Ventana torre
+  drawWindow(x + 51, baseY - 130, true);
+
+  // --- Camino de acceso (curva desde la derecha) ---
+  ctx.fillStyle = '#d4c5a9';
+  ctx.beginPath();
+  ctx.moveTo(x + w, baseY);
+  ctx.quadraticCurveTo(x + w + 28, baseY - 50, x + w + 14, baseY - 100);
+  ctx.lineTo(x + w + 26, baseY - 100);
+  ctx.quadraticCurveTo(x + w + 40, baseY - 50, x + w + 18, baseY);
+  ctx.fill();
+  ctx.strokeStyle = '#b8a88a';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  // Líneas del camino
+  ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+  ctx.beginPath();
+  ctx.moveTo(x + w + 6, baseY - 10);
+  ctx.quadraticCurveTo(x + w + 20, baseY - 50, x + w + 10, baseY - 90);
+  ctx.stroke();
+
+  // --- Brillo místico en la cúspide ---
+  ctx.save();
+  ctx.shadowColor = '#ffd700';
+  ctx.shadowBlur = 20;
+  ctx.fillStyle = 'rgba(255, 215, 0, 0.3)';
+  ctx.beginPath();
+  ctx.arc(centerX, baseY - 152, 10, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
 
 function drawEnemy(e) {
 
@@ -2804,21 +2958,7 @@ function draw() {
         ctx.fillRect(px + 4, py + 12, 4, TILE * 2 - 16);
 
       } else if (tile === 5) {
-
-        ctx.fillStyle = '#ff00ff';
-
-        ctx.fillRect(px + 12, py, 4, TILE * 6);
-
-        ctx.shadowColor = '#ff00ff';
-
-        ctx.shadowBlur = 15;
-
-        ctx.fillStyle = '#ff69b4';
-
-        ctx.beginPath(); ctx.moveTo(px + 16, py); ctx.lineTo(px + 48, py + 16); ctx.lineTo(px + 16, py + 32); ctx.fill();
-
-        ctx.shadowBlur = 0;
-
+        // Estructura final dibujada después del bucle
       }
 
     }
@@ -2826,6 +2966,11 @@ function draw() {
   }
 
 
+
+  // Dibujar estructura final (pirámide escalonada)
+  const finalCenterX = (LEVEL_WIDTH - 5) * TILE + TILE;
+  const finalBaseY = (LEVEL_HEIGHT - 6) * TILE + TILE;
+  drawFinalStructure(ctx, finalCenterX, finalBaseY);
 
   coins.forEach(c => {
 
