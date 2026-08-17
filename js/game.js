@@ -2280,7 +2280,7 @@ function playerDie(fellInGap = false) {
 
   else {
 
-    player.invincible = 120;
+    player.invincible = 300;
 
     player.vy = JUMP_FORCE;
 
