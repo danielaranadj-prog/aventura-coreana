@@ -620,6 +620,94 @@
   .win-score-box { background: rgba(26, 10, 46, 0.8); border-radius: 10px; padding: 8px 24px; display: flex; flex-direction: column; align-items: center; }
   .win-score-box strong { font-size: 22px; color: #00ffff; }
   .btn-secondary-menu { background: rgba(45, 27, 78, 0.9); border: 1px solid rgba(255, 105, 180, 0.5); color: #ff69b4; padding: 10px; border-radius: 10px; cursor: pointer; }
+
+  /* ===== PANTALLA DE CARGA DEL NIVEL ===== */
+  #level-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #0d0221;
+    z-index: 25;
+    overflow: hidden;
+  }
+  .level-loading-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+  .level-loading-darken {
+    position: absolute;
+    inset: 0;
+    background: rgba(13, 2, 33, 0.45);
+    z-index: 1;
+  }
+  .level-loading-overlay {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 18px;
+    padding: 28px 24px calc(28px + env(safe-area-inset-bottom));
+    width: 100%;
+    max-width: 380px;
+  }
+  .level-loading-title {
+    font-size: 48px;
+    font-weight: 900;
+    letter-spacing: 8px;
+    color: #ffd700;
+    text-shadow:
+      0 0 12px rgba(255,215,0,0.9),
+      0 0 30px rgba(255,0,255,0.5),
+      0 2px 4px rgba(0,0,0,0.8);
+    animation: arcadePulse 2s ease-in-out infinite;
+  }
+  .level-loading-bar-wrap {
+    width: 100%;
+    max-width: 260px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .level-loading-bar {
+    width: 100%;
+    height: 10px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(0,255,255,0.4);
+    border-radius: 5px;
+    overflow: hidden;
+    box-shadow: 0 0 12px rgba(0,255,255,0.2), inset 0 1px 2px rgba(0,0,0,0.3);
+  }
+  .level-loading-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #00ffff, #ff00ff, #00ffff);
+    background-size: 200% 100%;
+    border-radius: 4px;
+    transition: width 0.05s linear;
+    box-shadow: 0 0 12px rgba(0,255,255,0.5);
+    animation: loadingShine 1.5s linear infinite;
+  }
+  .level-loading-blink {
+    font-size: 12px;
+    color: #00ffff;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    animation: blink 0.8s step-end infinite;
+    text-shadow: 0 0 10px rgba(0,255,255,0.6);
+    font-weight: 700;
+  }
+
 </style>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
@@ -641,6 +729,20 @@
         <div class="loading-percent" id="loading-percent">0%</div>
       </div>
       <div class="loading-blink">LOADING GAME</div>
+    </div>
+  </div>
+
+  <div id="level-loading" class="hidden">
+    <img class="level-loading-bg" src="assets/level1.jpeg" alt="Level 1" draggable="false">
+    <div class="level-loading-darken"></div>
+    <div class="level-loading-overlay">
+      <div class="level-loading-title">LEVEL 1</div>
+      <div class="level-loading-bar-wrap">
+        <div class="level-loading-bar">
+          <div class="level-loading-fill" id="level-loading-fill"></div>
+        </div>
+      </div>
+      <div class="level-loading-blink">LOADING...</div>
     </div>
   </div>
 

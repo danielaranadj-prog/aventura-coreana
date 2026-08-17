@@ -2988,6 +2988,43 @@ function startTimer() {
 
 
 function startGame() {
+  audioManager.init();
+  audioManager.resumeContext();
+
+  // Reproducir sonido de inicio de juego
+  audioManager.play('gameStart');
+
+  // Ocultar menú y mostrar pantalla de carga del nivel
+  document.getElementById('start-screen').classList.add('hidden');
+  const levelLoading = document.getElementById('level-loading');
+  const levelFill = document.getElementById('level-loading-fill');
+  levelLoading.classList.remove('hidden');
+
+  // Animar barra de carga durante 2 segundos
+  let progress = 0;
+  const duration = 2000;
+  const intervalTime = 40;
+  const increment = 100 / (duration / intervalTime);
+
+  const loadInterval = setInterval(() => {
+    progress += increment;
+    if (progress >= 100) {
+      progress = 100;
+      levelFill.style.width = '100%';
+      clearInterval(loadInterval);
+
+      setTimeout(() => {
+        levelLoading.classList.add('hidden');
+        levelFill.style.width = '0%';
+        beginGame();
+      }, 150);
+    } else {
+      levelFill.style.width = progress + '%';
+    }
+  }, intervalTime);
+}
+
+function beginGame() {
 
   audioManager.init();
 
@@ -3039,48 +3076,12 @@ function startGame() {
 
 
   audioManager.stopAll();
-
-  const startSound = audioManager.sounds['gameStart'];
-
-  if (startSound) {
-
-    startSound.currentTime = 0;
-
-    const p = startSound.play();
-
-    if (p) {
-
-      p.then(() => {
-
-        startSound.onended = () => {
-
-          audioManager.playMusic('gameAdventure');
-
-        };
-
-      }).catch(() => {
-
-        audioManager.playMusic('gameAdventure');
-
-      });
-
-    } else {
-
-      audioManager.playMusic('gameAdventure');
-
-    }
-
-  } else {
-
-    audioManager.playMusic('gameAdventure');
-
-  }
-
+  audioManager.playMusic('gameAdventure');
 }
 
 
 
-function restartGame() { startGame(); }
+function restartGame() { beginGame(); }
 
 
 
