@@ -3198,6 +3198,7 @@ function gameLoop() {
   if (gameState !== 'playing') return;
 
   updatePlayer();
+  updateAnimations();
   updateEnemies();
   updateCoins();
   updateParticles();
