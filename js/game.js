@@ -1329,32 +1329,32 @@ function makeEnemy(type, x, groundY, onPlatform = false) {
   switch (type) {
     case 'goomba':
       w = 28; h = 28;
-      vx = 1.0 + Math.random() * 0.5;
+      vx = 0.5 + Math.random() * 0.4; // 0.5-0.9 (antes 1.0-1.5)
       startY = groundY - h;
       color = '#dc143c'; eyeColor = '#ffff00'; hornColor = '#8b0000';
       break;
     case 'big':
       w = 44; h = 44;
-      vx = 0.6 + Math.random() * 0.3;
+      vx = 0.3 + Math.random() * 0.2; // 0.3-0.5 (antes 0.6-0.9)
       startY = groundY - h;
       canStomp = false;
       color = '#8b0000'; eyeColor = '#ffcc00'; hornColor = '#4a0000';
       break;
     case 'fast':
       w = 22; h = 22;
-      vx = 2.0 + Math.random() * 0.8;
+      vx = 1.0 + Math.random() * 0.5; // 1.0-1.5 (antes 2.0-2.8)
       startY = groundY - h;
       color = '#00ffff'; eyeColor = '#ffffff'; hornColor = '#008b8b';
       break;
     case 'fly':
       w = 28; h = 28;
-      vx = 1.0;
+      vx = 0.5 + Math.random() * 0.3; // 0.5-0.8 (antes 1.0)
       startY = groundY - 80 - Math.random() * 60;
       color = '#ff69b4'; eyeColor = '#00ffff'; hornColor = '#ff00ff';
       break;
     case 'hunter':
       w = 28; h = 28;
-      vx = 1.0;
+      vx = 0.5 + Math.random() * 0.3; // 0.5-0.8 (antes 1.0)
       startY = groundY - h;
       color = '#9932cc'; eyeColor = '#ff00ff'; hornColor = '#4b0082';
       break;
@@ -1371,7 +1371,7 @@ function makeEnemy(type, x, groundY, onPlatform = false) {
     color, eyeColor, hornColor,
     baseY: startY,
     flyPhase: Math.random() * Math.PI * 2,
-    huntSpeed: 2.5,
+    huntSpeed: 1.5,
     originalVx: vx,
     onPlatform: onPlatform,
     platformLeft: onPlatform ? x - 40 : null,
