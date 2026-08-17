@@ -1237,191 +1237,146 @@ const player = {
 // ============================================================
 
 function createEnemies() {
-
   const enemies = [];
 
-  const count = 12 + Math.floor(Math.random() * 9); // 12-20 enemigos
+  // --- 1. ENEMIGOS EN EL SUELO (reducidos) ---
+  const groundCount = 6 + Math.floor(Math.random() * 5); // 6-10 enemigos
 
+  const groundTypes = ['goomba', 'big', 'fast', 'fly', 'hunter'];
 
-
-  const types = ['goomba', 'big', 'fast', 'fly', 'hunter'];
-
-
-
-  for (let i = 0; i < count; i++) {
-
+  for (let i = 0; i < groundCount; i++) {
     const tileX = 15 + Math.floor(Math.random() * (LEVEL_WIDTH - 25));
-
     const x = tileX * TILE;
 
-
-
-    // Determinar tipos disponibles según dificultad progresiva
-
     let availableTypes = [];
-
     if (tileX < 40) {
-
-      // Primer tercio: solo normales y rápidos
-
       availableTypes = ['goomba', 'fast'];
-
     } else if (tileX < 80) {
-
-      // Segundo tercio: normales, rápidos, grandes, cazadores
-
       availableTypes = ['goomba', 'big', 'fast', 'hunter'];
-
     } else {
-
-      // Último tercio: todos
-
       availableTypes = ['goomba', 'big', 'fast', 'fly', 'hunter'];
-
     }
-
-
-
-    // Probabilidades por tipo
 
     let type;
-
     const rand = Math.random();
-
     if (rand < 0.40) type = 'goomba';
-
     else if (rand < 0.60) type = 'big';
-
     else if (rand < 0.80) type = 'fast';
-
     else if (rand < 0.90) type = 'fly';
-
     else type = 'hunter';
 
-
-
-    // Si el tipo no está disponible en esta zona, elegir uno que sí
-
     if (!availableTypes.includes(type)) {
-
       type = availableTypes[Math.floor(Math.random() * availableTypes.length)];
-
     }
 
-
-
-    // Configuración según tipo
-
-    let w, h, vx, vy = 0, startY;
-
-    let canStomp = true;
-
-    let color, eyeColor, hornColor;
-
-
-
-    switch (type) {
-
-      case 'goomba':
-
-        w = 28; h = 28;
-
-        vx = 1.0 + Math.random() * 0.5; // 1.0-1.5
-
-        startY = GROUND_Y - 28;
-
-        color = '#dc143c'; eyeColor = '#ffff00'; hornColor = '#8b0000';
-
-        break;
-
-      case 'big':
-
-        w = 44; h = 44;
-
-        vx = 0.6 + Math.random() * 0.3; // 0.6-0.9
-
-        startY = GROUND_Y - 44;
-
-        canStomp = false;
-
-        color = '#8b0000'; eyeColor = '#ffcc00'; hornColor = '#4a0000';
-
-        break;
-
-      case 'fast':
-
-        w = 22; h = 22;
-
-        vx = 2.0 + Math.random() * 0.8; // 2.0-2.8
-
-        startY = GROUND_Y - 22;
-
-        color = '#00ffff'; eyeColor = '#ffffff'; hornColor = '#008b8b';
-
-        break;
-
-      case 'fly':
-
-        w = 28; h = 28;
-
-        vx = 1.0;
-
-        startY = GROUND_Y - 80 - Math.random() * 60; // Volando
-
-        color = '#ff69b4'; eyeColor = '#00ffff'; hornColor = '#ff00ff';
-
-        break;
-
-      case 'hunter':
-
-        w = 28; h = 28;
-
-        vx = 1.0;
-
-        startY = GROUND_Y - 28;
-
-        color = '#9932cc'; eyeColor = '#ff00ff'; hornColor = '#4b0082';
-
-        break;
-
-    }
-
-
-
-    // Dirección aleatoria
-
-    if (Math.random() < 0.5) vx = -vx;
-
-
-
-    enemies.push({
-
-      x, y: startY, w, h, vx, vy,
-
-      type, dead: false,
-
-      canStomp,
-
-      color, eyeColor, hornColor,
-
-      // Propiedades específicas
-
-      baseY: startY,           // Para voladores (onda senoidal)
-
-      flyPhase: Math.random() * Math.PI * 2,
-
-      huntSpeed: 2.5,          // Velocidad de cazador al perseguir
-
-      originalVx: vx,          // Guardar velocidad original
-
-    });
-
+    const enemy = makeEnemy(type, x, GROUND_Y);
+    if (enemy) enemies.push(enemy);
   }
 
+  // --- 2. ENEMIGOS EN PLATAFORMAS AZULES (aleatorio, no en todas) ---
+  // Recopilar plataformas azules (tile=2) del mapa generado
+  const platforms = [];
+  for (let y = 0; y < LEVEL_HEIGHT; y++) {
+    let startX = -1;
+    for (let x = 0; x < LEVEL_WIDTH; x++) {
+      if (levelMap[y][x] === 2) {
+        if (startX === -1) startX = x;
+      } else {
+        if (startX !== -1) {
+          const width = x - startX;
+          if (width >= 2) {
+            platforms.push({ x: startX, y: y, w: width });
+          }
+          startX = -1;
+        }
+      }
+    }
+    if (startX !== -1) {
+      const width = LEVEL_WIDTH - startX;
+      if (width >= 2) {
+        platforms.push({ x: startX, y: y, w: width });
+      }
+    }
+  }
 
+  // Elegir aleatoriamente ~35-65% de las plataformas para poner enemigos
+  const shuffled = platforms.sort(() => Math.random() - 0.5);
+  const platformCount = Math.max(1, Math.floor(platforms.length * (0.35 + Math.random() * 0.30)));
+  const selectedPlatforms = shuffled.slice(0, platformCount);
+
+  const platformTypes = ['goomba', 'fast', 'fly'];
+
+  selectedPlatforms.forEach(p => {
+    // Elegir posición aleatoria dentro de la plataforma
+    const offsetX = 1 + Math.floor(Math.random() * (p.w - 2));
+    const x = (p.x + offsetX) * TILE;
+    const groundY = p.y * TILE;
+
+    // Tipos más livianos para plataformas
+    const type = platformTypes[Math.floor(Math.random() * platformTypes.length)];
+    const enemy = makeEnemy(type, x, groundY, true);
+    if (enemy) enemies.push(enemy);
+  });
 
   return enemies;
+}
 
+function makeEnemy(type, x, groundY, onPlatform = false) {
+  let w, h, vx, vy = 0, startY;
+  let canStomp = true;
+  let color, eyeColor, hornColor;
+
+  switch (type) {
+    case 'goomba':
+      w = 28; h = 28;
+      vx = 1.0 + Math.random() * 0.5;
+      startY = groundY - h;
+      color = '#dc143c'; eyeColor = '#ffff00'; hornColor = '#8b0000';
+      break;
+    case 'big':
+      w = 44; h = 44;
+      vx = 0.6 + Math.random() * 0.3;
+      startY = groundY - h;
+      canStomp = false;
+      color = '#8b0000'; eyeColor = '#ffcc00'; hornColor = '#4a0000';
+      break;
+    case 'fast':
+      w = 22; h = 22;
+      vx = 2.0 + Math.random() * 0.8;
+      startY = groundY - h;
+      color = '#00ffff'; eyeColor = '#ffffff'; hornColor = '#008b8b';
+      break;
+    case 'fly':
+      w = 28; h = 28;
+      vx = 1.0;
+      startY = groundY - 80 - Math.random() * 60;
+      color = '#ff69b4'; eyeColor = '#00ffff'; hornColor = '#ff00ff';
+      break;
+    case 'hunter':
+      w = 28; h = 28;
+      vx = 1.0;
+      startY = groundY - h;
+      color = '#9932cc'; eyeColor = '#ff00ff'; hornColor = '#4b0082';
+      break;
+    default:
+      return null;
+  }
+
+  if (Math.random() < 0.5) vx = -vx;
+
+  return {
+    x, y: startY, w, h, vx, vy,
+    type, dead: false,
+    canStomp,
+    color, eyeColor, hornColor,
+    baseY: startY,
+    flyPhase: Math.random() * Math.PI * 2,
+    huntSpeed: 2.5,
+    originalVx: vx,
+    onPlatform: onPlatform,
+    platformLeft: onPlatform ? x - 40 : null,
+    platformRight: onPlatform ? x + 40 : null,
+  };
 }
 
 let enemies = [];
@@ -2162,25 +2117,24 @@ function updateEnemies() {
 
 
     // Lógica de suelo/pared solo para enemigos que caminan
-
     if (e.type !== 'fly') {
-
-      const frontX = e.x + (e.vx > 0 ? e.w : 0);
-
-      const groundAhead = getTile(frontX, e.y + e.h + 4);
-
-      const wallAhead = getTile(frontX, e.y + e.h / 2);
-
-
-
-      if ((!isSolid(groundAhead) && e.type !== 'fly') || isSolid(wallAhead)) {
-
-        e.vx *= -1;
-
-        if (e.type === 'hunter') e.originalVx = e.vx;
-
+      if (e.onPlatform) {
+        // Enemigos en plataformas: dar la vuelta al llegar al borde
+        const frontX = e.x + (e.vx > 0 ? e.w : 0);
+        const groundBelow = getTile(frontX, e.y + e.h + 4);
+        const wallAhead = getTile(frontX, e.y + e.h / 2);
+        if (!isSolid(groundBelow) || isSolid(wallAhead)) {
+          e.vx *= -1;
+        }
+      } else {
+        const frontX = e.x + (e.vx > 0 ? e.w : 0);
+        const groundAhead = getTile(frontX, e.y + e.h + 4);
+        const wallAhead = getTile(frontX, e.y + e.h / 2);
+        if ((!isSolid(groundAhead) && e.type !== 'fly') || isSolid(wallAhead)) {
+          e.vx *= -1;
+          if (e.type === 'hunter') e.originalVx = e.vx;
+        }
       }
-
     }
 
 
