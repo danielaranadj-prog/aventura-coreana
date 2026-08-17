@@ -718,7 +718,7 @@ class Animator {
 
     this.loader = loader;
 
-    this.currentAnim = 'ready';
+    this.currentAnim = this.resolveAnimName('ready');
 
     this.currentFrame = 0;
 
@@ -2070,11 +2070,11 @@ function updateAnimations() {
     // Forzamos la velocidad a 0 para eliminar el micro-movimiento residual
     player.vx = 0;
 
-    animator.setStaticFrame('ready', 0);
+    animator.setStaticFrame('run', 6);
 
   } else {
 
-    animator.setAnimation('run', 0);
+    animator.setAnimation('run', 6);
 
     animator.update();
 
@@ -3021,6 +3021,8 @@ function startGame() {
 
   player.celebrating = false; player.celebrateTimer = 0;
 
+  if (animator) animator.setStaticFrame('run', 6);
+
   levelMap = generateLevel(); enemies = createEnemies(); coins = createCoins(); particles = [];
 
   if (animationFrameId) cancelAnimationFrame(animationFrameId);
@@ -3193,13 +3195,16 @@ function winGame() {
 
 
 function gameLoop() {
+
   animationFrameId = requestAnimationFrame(gameLoop);
 
   if (gameState !== 'playing') return;
 
   updatePlayer();
+
   updateAnimations();
-  updateEnemies();
+
+  updateEnemies()
   updateCoins();
   updateParticles();
   updateCamera();
