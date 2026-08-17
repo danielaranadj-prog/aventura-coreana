@@ -391,28 +391,28 @@ function drawHazards() {
   hazardZones.forEach(h => {
     if (h.type === 'acid') {
       ctx.fillStyle = 'rgba(0, 255, 65, 0.25)';
-      ctx.fillRect(h.x - cameraX, h.y, h.w, h.h);
+      ctx.fillRect(h.x, h.y, h.w, h.h);
       for (let i = 0; i < 5; i++) {
         const bx = h.x + (i * (h.w / 5)) + Math.sin(Date.now() / 300 + i) * 4;
         const by = h.y + 8 + Math.cos(Date.now() / 400 + i) * 6;
         const alpha = 0.3 + Math.sin(Date.now() / 200 + i) * 0.2;
         ctx.fillStyle = `rgba(0, 255, 100, ${alpha})`;
         ctx.beginPath();
-        ctx.arc(bx - cameraX, by, 2 + Math.random(), 0, Math.PI * 2);
+        ctx.arc(bx, by, 2 + Math.random(), 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.strokeStyle = 'rgba(0, 255, 65, 0.5)';
       ctx.lineWidth = 1;
-      ctx.strokeRect(h.x - cameraX, h.y, h.w, h.h);
+      ctx.strokeRect(h.x, h.y, h.w, h.h);
     } else if (h.type === 'press') {
       const pressY = h.y + Math.sin(Date.now() / (500 / h.speed)) * (h.h / 2);
       ctx.fillStyle = '#555';
-      ctx.fillRect(h.x - cameraX, pressY, h.w, h.h / 2);
+      ctx.fillRect(h.x, pressY, h.w, h.h / 2);
       ctx.fillStyle = '#ff0000';
-      ctx.fillRect(h.x - cameraX, pressY + h.h / 2 - 4, h.w, 4);
+      ctx.fillRect(h.x, pressY + h.h / 2 - 4, h.w, 4);
       ctx.fillStyle = '#333';
       for (let tx = 0; tx < h.w; tx += 8) {
-        ctx.fillRect(h.x + tx - cameraX, pressY + h.h / 2 - 4, 4, 8);
+        ctx.fillRect(h.x + tx, pressY + h.h / 2 - 4, 4, 8);
       }
     }
   });
@@ -422,12 +422,12 @@ function drawMovingPlatforms() {
   if (currentLevelTheme !== 'factory') return;
   movingPlatforms.forEach(mp => {
     ctx.fillStyle = '#4a4a4a';
-    ctx.fillRect(mp.x - cameraX, mp.y, mp.w, mp.h);
+    ctx.fillRect(mp.x, mp.y, mp.w, mp.h);
     ctx.fillStyle = '#ff4500';
-    ctx.fillRect(mp.x - cameraX, mp.y, mp.w, 3);
-    ctx.fillRect(mp.x - cameraX, mp.y + mp.h - 3, mp.w, 3);
+    ctx.fillRect(mp.x, mp.y, mp.w, 3);
+    ctx.fillRect(mp.x, mp.y + mp.h - 3, mp.w, 3);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-    ctx.fillRect(mp.x - cameraX + 4, mp.y + 8, mp.w - 8, 2);
+    ctx.fillRect(mp.x + 4, mp.y + 8, mp.w - 8, 2);
   });
 }
 
@@ -632,6 +632,20 @@ function drawEnemy(e) {
     ctx.strokeStyle = '#4a0000'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(e.x + 4, e.y + 4); ctx.lineTo(e.x + 12, e.y + 6); ctx.moveTo(e.x + e.w - 4, e.y + 4); ctx.lineTo(e.x + e.w - 12, e.y + 6); ctx.stroke();
   }
+
+  // Proyectiles del welder (dibujados aquí, dentro del save/restore de drawEnemy)
+  if (e.type === 'welder' && e.projectiles) {
+    e.projectiles.forEach(proj => {
+      ctx.fillStyle = '#ff4500';
+      ctx.shadowColor = '#ff4500';
+      ctx.shadowBlur = 6;
+      ctx.beginPath();
+      ctx.arc(proj.x, proj.y, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    });
+  }
+
   ctx.restore();
 }
 
@@ -643,7 +657,7 @@ function drawCoins() {
     const bobY = Math.sin(c.bob) * 4;
     if (c.type === 'prispas') {
       const prispas = spriteLoader.get('prispas');
-      if (prispas) ctx.drawImage(prispas.image, c.x - cameraX - 1, c.y + 2 + bobY, 18, 28);
+      if (prispas) ctx.drawImage(prispas.image, c.x - 1, c.y + 2 + bobY, 18, 28);
     } else {
       const item = spriteLoader.get('item');
       if (item) {
@@ -653,7 +667,7 @@ function drawCoins() {
         ctx.save();
         ctx.shadowColor = currentLevelTheme === 'factory' ? '#ff4500' : '#00ffff';
         ctx.shadowBlur = 8 + Math.sin(c.bob) * 4;
-        ctx.drawImage(item.image, c.x - cameraX + offset, c.y + offset + bobY, size, size);
+        ctx.drawImage(item.image, c.x + offset, c.y + offset + bobY, size, size);
         ctx.shadowBlur = 0;
         ctx.restore();
       }

@@ -135,11 +135,14 @@ function updatePlayer() {
   if (player.x < 0) { player.x = 0; player.vx = 0; }
   if (player.x > LEVEL_WIDTH * TILE - player.w) { player.x = LEVEL_WIDTH * TILE - player.w; }
 
-  // Colisión horizontal
-  const left = Math.floor(player.x / TILE), right = Math.floor((player.x + player.w - 1) / TILE);
-  const top = Math.floor(player.y / TILE), bottom = Math.floor((player.y + player.h - 1) / TILE);
+  // --- Colisión horizontal ---
+  const left = Math.floor(player.x / TILE);
+  const right = Math.floor((player.x + player.w - 1) / TILE);
+  const top = Math.floor(player.y / TILE);
+  const bottom = Math.floor((player.y + player.h - 1) / TILE);
   for (let ty = top; ty <= bottom; ty++) {
     for (let tx = left; tx <= right; tx++) {
+      if (ty < 0 || ty >= LEVEL_HEIGHT || tx < 0 || tx >= LEVEL_WIDTH) continue;
       if (isSolid(levelMap[ty][tx])) {
         if (player.vx > 0) { player.x = tx * TILE - player.w - 0.1; player.vx = 0; }
         else if (player.vx < 0) { player.x = (tx + 1) * TILE + 0.1; player.vx = 0; }
@@ -147,17 +150,20 @@ function updatePlayer() {
     }
   }
 
-  // Colisión vertical
-  player.y += player.vy; player.onGround = false;
-  const left2 = Math.floor(player.x / TILE), right2 = Math.floor((player.x + player.w - 1) / TILE);
-  const top2 = Math.floor(player.y / TILE), bottom2 = Math.floor((player.y + player.h - 1) / TILE);
+  // --- Colisión vertical ---
+  player.y += player.vy;
+  player.onGround = false;
+  const left2 = Math.floor(player.x / TILE);
+  const right2 = Math.floor((player.x + player.w - 1) / TILE);
+  const top2 = Math.floor(player.y / TILE);
+  const bottom2 = Math.floor((player.y + player.h - 1) / TILE);
   for (let ty = top2; ty <= bottom2; ty++) {
     for (let tx = left2; tx <= right2; tx++) {
+      if (ty < 0 || ty >= LEVEL_HEIGHT || tx < 0 || tx >= LEVEL_WIDTH) continue;
       const tile = levelMap[ty][tx];
       if (isSolid(tile)) {
         if (player.vy > 0) {
           player.y = ty * TILE - player.h - 0.1; player.vy = 0; player.onGround = true;
-          // Verificar si aterrizó en plataforma móvil
           if (currentLevelTheme === 'factory') {
             player.onMovingPlatform = null;
             movingPlatforms.forEach(mp => {
@@ -176,7 +182,13 @@ function updatePlayer() {
     }
   }
 
-  // Colisión con plataformas móviles (por abajo o lateral)
+  // Límite superior del mundo (no salir volando al infinito)
+  if (player.y < -80) {
+    player.y = -80;
+    player.vy = 0;
+  }
+
+  // Colisión con plataformas móviles
   if (currentLevelTheme === 'factory') {
     movingPlatforms.forEach(mp => {
       if (rectIntersect(player, mp)) {
@@ -192,28 +204,29 @@ function updatePlayer() {
 
   // Peligros (fábrica)
   if (currentLevelTheme === 'factory') {
-    hazardZones.forEach(h => {
+    for (let i = 0; i < hazardZones.length; i++) {
+      const h = hazardZones[i];
       if (h.type === 'acid') {
         if (player.x + player.w > h.x && player.x < h.x + h.w &&
             player.y + player.h > h.y && player.y < h.y + h.h) {
-          if (player.invincible <= 0) playerDie(true);
+          if (player.invincible <= 0) {
+            playerDie(true);
+            return;
+          }
         }
       } else if (h.type === 'press') {
         const pressY = h.y + Math.sin(Date.now() / (500 / h.speed)) * (h.h / 2);
         const pressRect = { x: h.x, y: pressY, w: h.w, h: h.h / 2 };
         if (rectIntersect(player, pressRect) && player.invincible <= 0) {
           playerDie();
+          return;
         }
       }
-    });
+    }
   }
 
   // Caída al vacío
-  const tileBelowLeft = getTile(player.x + 4, player.y + player.h + 2);
-  const tileBelowRight = getTile(player.x + player.w - 4, player.y + player.h + 2);
-  const isOverGap = (tileBelowLeft === 0 && tileBelowRight === 0 && player.y >= GROUND_Y - 10);
-
-  if (player.y > LEVEL_HEIGHT * TILE + 20 || (isOverGap && currentLevelTheme !== 'factory')) {
+  if (player.y > LEVEL_HEIGHT * TILE + 20) {
     if (player.invincible <= 0) {
       playerDie(true);
     } else {
@@ -222,6 +235,7 @@ function updatePlayer() {
       player.vy = 0;
       player.vx = 0;
       player.onGround = true;
+      player.onMovingPlatform = null;
     }
     return;
   }
@@ -262,7 +276,6 @@ function updateEnemies() {
       }
       e.x += e.vx;
     } else if (e.type === 'spark') {
-      // Rebote en paredes
       e.x += e.vx;
       if (e.x <= 0 || e.x + e.w >= LEVEL_WIDTH * TILE) {
         e.vx *= -1;
@@ -273,7 +286,6 @@ function updateEnemies() {
         e.vx *= -1;
       }
     } else if (e.type === 'welder') {
-      // Dron: vuela en onda + dispara
       e.flyPhase += 0.04;
       e.y = e.baseY + Math.sin(e.flyPhase) * 30;
       e.x += e.vx;
@@ -287,7 +299,6 @@ function updateEnemies() {
           life: 60,
         });
       }
-      // Actualizar proyectiles
       for (let i = e.projectiles.length - 1; i >= 0; i--) {
         const proj = e.projectiles[i];
         proj.x += proj.vx;
@@ -335,7 +346,6 @@ function updateEnemies() {
     if (rectIntersect(player, e) && player.invincible <= 0) {
       const stompFromAbove = player.vy > 0 && player.y + player.h < e.y + e.h / 2 + 8;
 
-      // Soldado Oxidado: invulnerable por el frente
       if (e.type === 'rusty' && e.frontShield) {
         const playerFromFront = (e.vx > 0 && player.x > e.x) || (e.vx < 0 && player.x < e.x);
         if (playerFromFront && !stompFromAbove) {
@@ -354,19 +364,6 @@ function updateEnemies() {
       } else {
         playerDie();
       }
-    }
-
-    // Proyectiles del welder (ya manejados arriba, pero dibujarlos)
-    if (e.type === 'welder' && e.projectiles) {
-      e.projectiles.forEach(proj => {
-        ctx.fillStyle = '#ff4500';
-        ctx.shadowColor = '#ff4500';
-        ctx.shadowBlur = 6;
-        ctx.beginPath();
-        ctx.arc(proj.x - cameraX, proj.y, 3, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      });
     }
   });
 }
@@ -428,17 +425,21 @@ function playerDie(fellInGap = false) {
   lives--; updateUI();
   spawnParticles(player.x + player.w / 2, player.y + player.h / 2, '#ff0040', 20);
   audioManager.play('death');
-  if (lives <= 0) gameOver();
-  else {
-    player.invincible = 300;
-    player.vy = JUMP_FORCE;
-    player.x = Math.max(64, player.x - 200);
-    if (fellInGap) {
-      player.y = GROUND_Y - player.h + 2;
-      player.vy = 0;
-    } else {
-      player.y = 200;
-    }
+  if (lives <= 0) {
+    gameOver();
+    return;
+  }
+  player.invincible = 180;
+  player.vy = JUMP_FORCE;
+  player.celebrating = false;
+  player.celebrateTimer = 0;
+  player.onMovingPlatform = null;
+  player.x = 64;
+  if (fellInGap) {
+    player.y = GROUND_Y - player.h + 2;
+    player.vy = 0;
+  } else {
+    player.y = 200;
   }
 }
 
