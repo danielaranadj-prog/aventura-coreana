@@ -113,11 +113,11 @@ class Animator {
       return map[name] || name;
     }
 
-    if (selectedCharacter === 'casares') {
+    if (selectedCharacter === 'cazares') {
       const map = {
-        'run': 'casares-run',
-        'celebrate': 'casares-celebrate',
-        'ready': 'casares-ready'
+        'run': 'casa-run',
+        'celebrate': 'casa-celebrate',
+        'ready': 'casa-ready'
       };
       return map[name] || name;
     }
