@@ -711,12 +711,12 @@ function drawAranaPreview() {
   );
 }
 
-function drawCasaresPreview() {
-  const preview = document.getElementById('casares-preview');
-  const spriteData = spriteLoader.get('casares-ready');
+function drawCazaresPreview() {
+  const preview = document.getElementById('cazares-preview');
+  const spriteData = spriteLoader.get('casa-ready');
   if (!preview || !spriteData) return;
   const previewCtx = preview.getContext('2d');
-  const frameIndex = typeof casaresPreviewFrame !== 'undefined' ? casaresPreviewFrame : 0;
+  const frameIndex = typeof cazaresPreviewFrame !== 'undefined' ? cazaresPreviewFrame : 0;
   const col = frameIndex % spriteData.cols;
   const row = Math.floor(frameIndex / spriteData.cols);
   const dw = 80, dh = 153;
@@ -734,7 +734,7 @@ function drawWinCharacter() {
   const preview = document.getElementById('win-character-preview');
   let animName = 'celebrate';
   if (selectedCharacter === 'arana') animName = 'arana-celebrate';
-  if (selectedCharacter === 'casares') animName = 'casares-celebrate';
+  if (selectedCharacter === 'cazares') animName = 'cazares-celebrate';
   
   const spriteData = spriteLoader.get(animName);
   if (!preview || !spriteData) return;
