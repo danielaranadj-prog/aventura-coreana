@@ -1,9 +1,9 @@
 // ============================================================
-// SISTEMA DE AUDIO
+// SISTEMA DE AUDIO OPTIMIZADO
 // ============================================================
 class AudioManager {
   constructor(config) {
-    this.config = config;
+    this.config = config || {};
     this.sounds = {};
     this.audioCtx = null;
     this.masterGain = null;
@@ -12,15 +12,16 @@ class AudioManager {
   }
 
   init() {
-    if (this.initialized) return;
+    if (this.initialized && this.audioCtx) return;
     try {
-      this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      this.audioCtx = new AudioContextClass();
       this.masterGain = this.audioCtx.createGain();
       this.masterGain.gain.value = 1.0;
       this.masterGain.connect(this.audioCtx.destination);
       this.initialized = true;
     } catch (e) {
-      console.warn('Web Audio API no disponible');
+      console.warn('Web Audio API no está disponible en este navegador.', e);
     }
   }
 
@@ -30,16 +31,25 @@ class AudioManager {
       const promise = new Promise((resolve) => {
         const audio = new Audio();
         audio.src = info.src;
-        audio.loop = info.loop;
-        audio.volume = info.volume;
+        audio.loop = !!info.loop;
+        audio.volume = typeof info.volume === 'number' ? info.volume : 1.0;
         audio.preload = 'auto';
+        
         let resolved = false;
-        const done = () => { if (!resolved) { resolved = true; resolve(); } };
+        const done = () => {
+          if (!resolved) {
+            resolved = true;
+            resolve();
+          }
+        };
+
         audio.addEventListener('canplaythrough', done, { once: true });
         audio.addEventListener('error', () => {
-          console.warn('No se pudo cargar audio:', info.src);
+          console.warn('No se pudo cargar el archivo de audio:', info.src);
           done();
         }, { once: true });
+
+        // Tiempo de seguridad por si el evento canplaythrough no se dispara
         setTimeout(done, 4000);
         audio.load();
         this.sounds[name] = audio;
@@ -50,6 +60,9 @@ class AudioManager {
   }
 
   resumeContext() {
+    if (!this.audioCtx) {
+      this.init();
+    }
     if (this.audioCtx && this.audioCtx.state === 'suspended') {
       this.audioCtx.resume();
     }
@@ -58,10 +71,17 @@ class AudioManager {
   play(name) {
     this.resumeContext();
     const sound = this.sounds[name];
-    if (!sound) return;
+    if (!sound) {
+      console.warn(`El sonido "${name}" no está registrado.`);
+      return;
+    }
     sound.currentTime = 0;
     const playPromise = sound.play();
-    if (playPromise) playPromise.catch(() => {});
+    if (playPromise !== undefined) {
+      playPromise.catch(error => {
+        console.warn(`Reproducción bloqueada por el navegador para "${name}":`, error);
+      });
+    }
   }
 
   stop(name) {
@@ -93,9 +113,9 @@ class AudioManager {
   }
 
   playVictoryFanfare() {
-    if (!this.audioCtx) this.init();
-    if (!this.audioCtx) return;
     this.resumeContext();
+    if (!this.audioCtx) return;
+    
     const now = this.audioCtx.currentTime;
     const notes = [
       { f: 523.25, t: 0.0, d: 0.25 },
@@ -103,6 +123,7 @@ class AudioManager {
       { f: 783.99, t: 0.30, d: 0.25 },
       { f: 1046.50, t: 0.45, d: 0.6 },
     ];
+    
     notes.forEach(n => {
       const osc = this.audioCtx.createOscillator();
       const gain = this.audioCtx.createGain();
@@ -115,8 +136,9 @@ class AudioManager {
       osc.start(now + n.t);
       osc.stop(now + n.t + n.d);
     });
+
     const chord = [261.63, 329.63, 392.00];
-    chord.forEach((freq, i) => {
+    chord.forEach((freq) => {
       const osc = this.audioCtx.createOscillator();
       const gain = this.audioCtx.createGain();
       osc.type = 'triangle';
@@ -131,14 +153,15 @@ class AudioManager {
   }
 
   playOneUp() {
-    if (!this.audioCtx) this.init();
-    if (!this.audioCtx) return;
     this.resumeContext();
+    if (!this.audioCtx) return;
+    
     const now = this.audioCtx.currentTime;
     const notes = [
       { f: 987.77, t: 0.0, d: 0.12 },
       { f: 1318.51, t: 0.12, d: 0.4 },
     ];
+    
     notes.forEach(n => {
       const osc = this.audioCtx.createOscillator();
       const gain = this.audioCtx.createGain();
@@ -154,4 +177,5 @@ class AudioManager {
   }
 }
 
-const audioManager = new AudioManager(AUDIO_CONFIG);
+// Instancia global asegurando que AUDIO_CONFIG esté definido previamente
+const audioManager = new AudioManager(typeof AUDIO_CONFIG !== 'undefined' ? AUDIO_CONFIG : {});
