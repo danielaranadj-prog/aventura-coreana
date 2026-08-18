@@ -190,19 +190,20 @@ function _drawFactoryTile(tile, px, py) {
     ctx.fillRect(px + 18, py + 12, 4, 4);
     ctx.shadowBlur = 0;
   } else if (tile === 4) {
+    // CORREGIDO: Reducido a 32x32 px (1x1 tile) para coincidir exactamente con la colisión física
     ctx.fillStyle = '#4a4a4a';
-    ctx.fillRect(px, py, TILE * 2, TILE * 2);
+    ctx.fillRect(px, py, TILE, TILE);
     ctx.fillStyle = '#666';
-    ctx.fillRect(px, py, TILE * 2, 8);
-    ctx.fillRect(px, py + TILE, TILE * 2, 4);
+    ctx.fillRect(px, py, TILE, 6);
+    ctx.fillRect(px, py + TILE - 6, TILE, 6);
     ctx.strokeStyle = '#ff4500';
     ctx.lineWidth = 2;
-    ctx.strokeRect(px, py, TILE * 2, TILE * 2);
+    ctx.strokeRect(px, py, TILE, TILE);
     ctx.fillStyle = '#333';
-    ctx.fillRect(px + 4, py + 12, 4, TILE * 2 - 16);
+    ctx.fillRect(px + 4, py + 6, 4, TILE - 12);
     ctx.fillStyle = '#888';
     ctx.beginPath(); ctx.arc(px + 6, py + 6, 2, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(px + TILE * 2 - 6, py + 6, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(px + TILE - 6, py + TILE - 6, 2, 0, Math.PI * 2); ctx.fill();
   }
 }
 
@@ -633,7 +634,6 @@ function drawEnemy(e) {
     ctx.beginPath(); ctx.moveTo(e.x + 4, e.y + 4); ctx.lineTo(e.x + 12, e.y + 6); ctx.moveTo(e.x + e.w - 4, e.y + 4); ctx.lineTo(e.x + e.w - 12, e.y + 6); ctx.stroke();
   }
 
-  // Proyectiles del welder (dibujados aquí, dentro del save/restore de drawEnemy)
   if (e.type === 'welder' && e.projectiles) {
     e.projectiles.forEach(proj => {
       ctx.fillStyle = '#ff4500';

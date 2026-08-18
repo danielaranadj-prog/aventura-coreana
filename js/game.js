@@ -462,21 +462,10 @@ function startTimer() {
 }
 
 // ---------- INICIO / REINICIO ----------
-let audioLoadPromise = null;
-
-function ensureAudioLoaded() {
+function startGame() {
   audioManager.init();
   audioManager.resumeContext();
-  if (!audioLoadPromise) {
-    audioLoadPromise = audioManager.loadAll();
-  }
-  return audioLoadPromise;
-}
-
-function startGame() {
-  ensureAudioLoaded().then(() => {
-    audioManager.resumeContext();
-    audioManager.play('gameStart');
+  audioManager.play('gameStart');
   document.getElementById('start-screen').classList.add('hidden');
   const levelLoading = document.getElementById('level-loading');
   const levelFill = document.getElementById('level-loading-fill');
@@ -504,13 +493,11 @@ function startGame() {
       levelFill.style.width = progress + '%';
     }
   }, intervalTime);
-  });
 }
 
 function beginGame() {
   audioManager.init();
   audioManager.resumeContext();
-  if (!audioLoadPromise) audioLoadPromise = audioManager.loadAll();
   document.getElementById('start-screen').classList.add('hidden');
   document.getElementById('gameover-screen').classList.add('hidden');
   document.getElementById('win-screen').classList.add('hidden');
