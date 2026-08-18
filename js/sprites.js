@@ -103,26 +103,12 @@ class Animator {
 
   resolveAnimName(name) {
     if (selectedCharacter === 'tomy') return name;
-    
-    if (selectedCharacter === 'arana') {
-      const map = {
-        'run': 'arana-run',
-        'celebrate': 'arana-celebrate',
-        'ready': 'arana-ready'
-      };
-      return map[name] || name;
-    }
-
-    if (selectedCharacter === 'cazares') {
-      const map = {
-        'run': 'casa-run',
-        'celebrate': 'casa-celebrate',
-        'ready': 'casa-ready'
-      };
-      return map[name] || name;
-    }
-
-    return name;
+    const map = {
+      'run': 'arana-run',
+      'celebrate': 'arana-celebrate',
+      'ready': 'arana-ready'
+    };
+    return map[name] || name;
   }
 
   setAnimation(name, startFrame = 0) {

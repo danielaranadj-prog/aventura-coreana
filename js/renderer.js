@@ -191,18 +191,18 @@ function _drawFactoryTile(tile, px, py) {
     ctx.shadowBlur = 0;
   } else if (tile === 4) {
     ctx.fillStyle = '#4a4a4a';
-    ctx.fillRect(px, py, TILE, TILE);
+    ctx.fillRect(px, py, TILE * 2, TILE * 2);
     ctx.fillStyle = '#666';
-    ctx.fillRect(px, py, TILE, 6);
-    ctx.fillRect(px, py + TILE - 6, TILE, 6);
+    ctx.fillRect(px, py, TILE * 2, 8);
+    ctx.fillRect(px, py + TILE, TILE * 2, 4);
     ctx.strokeStyle = '#ff4500';
     ctx.lineWidth = 2;
-    ctx.strokeRect(px, py, TILE, TILE);
+    ctx.strokeRect(px, py, TILE * 2, TILE * 2);
     ctx.fillStyle = '#333';
-    ctx.fillRect(px + 4, py + 6, 4, TILE - 12);
+    ctx.fillRect(px + 4, py + 12, 4, TILE * 2 - 16);
     ctx.fillStyle = '#888';
     ctx.beginPath(); ctx.arc(px + 6, py + 6, 2, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(px + TILE - 6, py + TILE - 6, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(px + TILE * 2 - 6, py + 6, 2, 0, Math.PI * 2); ctx.fill();
   }
 }
 
@@ -633,6 +633,7 @@ function drawEnemy(e) {
     ctx.beginPath(); ctx.moveTo(e.x + 4, e.y + 4); ctx.lineTo(e.x + 12, e.y + 6); ctx.moveTo(e.x + e.w - 4, e.y + 4); ctx.lineTo(e.x + e.w - 12, e.y + 6); ctx.stroke();
   }
 
+  // Proyectiles del welder (dibujados aquí, dentro del save/restore de drawEnemy)
   if (e.type === 'welder' && e.projectiles) {
     e.projectiles.forEach(proj => {
       ctx.fillStyle = '#ff4500';
@@ -711,31 +712,9 @@ function drawAranaPreview() {
   );
 }
 
-function drawCazaresPreview() {
-  const preview = document.getElementById('cazares-preview');
-  const spriteData = spriteLoader.get('casa-ready');
-  if (!preview || !spriteData) return;
-  const previewCtx = preview.getContext('2d');
-  const frameIndex = typeof cazaresPreviewFrame !== 'undefined' ? cazaresPreviewFrame : 0;
-  const col = frameIndex % spriteData.cols;
-  const row = Math.floor(frameIndex / spriteData.cols);
-  const dw = 80, dh = 153;
-  previewCtx.clearRect(0, 0, preview.width, preview.height);
-  previewCtx.imageSmoothingEnabled = true;
-  previewCtx.drawImage(
-    spriteData.image,
-    col * spriteData.frameWidth, row * spriteData.frameHeight,
-    spriteData.frameWidth, spriteData.frameHeight,
-    (preview.width - dw) / 2, 0, dw, dh,
-  );
-}
-
 function drawWinCharacter() {
   const preview = document.getElementById('win-character-preview');
-  let animName = 'celebrate';
-  if (selectedCharacter === 'arana') animName = 'arana-celebrate';
-  if (selectedCharacter === 'cazares') animName = 'cazares-celebrate';
-  
+  const animName = selectedCharacter === 'tomy' ? 'celebrate' : 'arana-celebrate';
   const spriteData = spriteLoader.get(animName);
   if (!preview || !spriteData) return;
   const ctxWin = preview.getContext('2d');
