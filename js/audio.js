@@ -179,3 +179,10 @@ class AudioManager {
 
 // Instancia global asegurando que AUDIO_CONFIG esté definido previamente
 const audioManager = new AudioManager(typeof AUDIO_CONFIG !== 'undefined' ? AUDIO_CONFIG : {});
+
+// Cargar todos los sonidos una vez que AUDIO_CONFIG ya está disponible.
+// Esto evita que play() intente reproducir sonidos que todavía no existen
+// en audioManager.sounds.
+audioManager.loadAll().catch((error) => {
+  console.warn('Error al cargar los archivos de audio:', error);
+});
