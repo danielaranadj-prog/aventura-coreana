@@ -190,7 +190,6 @@ function _drawFactoryTile(tile, px, py) {
     ctx.fillRect(px + 18, py + 12, 4, 4);
     ctx.shadowBlur = 0;
   } else if (tile === 4) {
-    // CORREGIDO: Reducido a 32x32 px (1x1 tile) para coincidir exactamente con la colisión física
     ctx.fillStyle = '#4a4a4a';
     ctx.fillRect(px, py, TILE, TILE);
     ctx.fillStyle = '#666';
@@ -712,9 +711,31 @@ function drawAranaPreview() {
   );
 }
 
+function drawCasaresPreview() {
+  const preview = document.getElementById('casares-preview');
+  const spriteData = spriteLoader.get('casares-ready');
+  if (!preview || !spriteData) return;
+  const previewCtx = preview.getContext('2d');
+  const frameIndex = typeof casaresPreviewFrame !== 'undefined' ? casaresPreviewFrame : 0;
+  const col = frameIndex % spriteData.cols;
+  const row = Math.floor(frameIndex / spriteData.cols);
+  const dw = 80, dh = 153;
+  previewCtx.clearRect(0, 0, preview.width, preview.height);
+  previewCtx.imageSmoothingEnabled = true;
+  previewCtx.drawImage(
+    spriteData.image,
+    col * spriteData.frameWidth, row * spriteData.frameHeight,
+    spriteData.frameWidth, spriteData.frameHeight,
+    (preview.width - dw) / 2, 0, dw, dh,
+  );
+}
+
 function drawWinCharacter() {
   const preview = document.getElementById('win-character-preview');
-  const animName = selectedCharacter === 'tomy' ? 'celebrate' : 'arana-celebrate';
+  let animName = 'celebrate';
+  if (selectedCharacter === 'arana') animName = 'arana-celebrate';
+  if (selectedCharacter === 'casares') animName = 'casares-celebrate';
+  
   const spriteData = spriteLoader.get(animName);
   if (!preview || !spriteData) return;
   const ctxWin = preview.getContext('2d');
