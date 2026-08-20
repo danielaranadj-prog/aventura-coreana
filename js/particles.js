@@ -1,78 +1,23 @@
 // ============================================================
-// PARTÍCULAS Y FUEGOS ARTIFICIALES
+// PARTICLES.JS — Sistema de partículas y fuegos artificiales
 // ============================================================
+
 let particles = [];
 let fireworks = [];
 
-function spawnParticles(x, y, color, count = 8) {
+function spawnParticles(x, y, color, count) {
   for (let i = 0; i < count; i++) {
     particles.push({
-      x, y,
+      x: x,
+      y: y,
       vx: (Math.random() - 0.5) * 6,
-      vy: (Math.random() - 1) * 6,
+      vy: (Math.random() - 0.5) * 6,
       life: 30 + Math.random() * 20,
-      color,
-      size: 3 + Math.random() * 4,
+      maxLife: 50,
+      size: 2 + Math.random() * 3,
+      color: color,
     });
   }
-}
-
-function spawnFirework() {
-  const colors = ['#ff0040', '#00ffff', '#ffd700', '#ff69b4', '#00ff88', '#ff8c00', '#9d4edd'];
-  const x = 30 + Math.random() * 340;
-  const y = 80 + Math.random() * 120;
-  const color = colors[Math.floor(Math.random() * colors.length)];
-  const fwParticles = [];
-  const count = 20 + Math.floor(Math.random() * 16);
-  for (let i = 0; i < count; i++) {
-    const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.5;
-    const speed = 1.5 + Math.random() * 2.5;
-    fwParticles.push({
-      x, y,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
-      life: 40 + Math.random() * 30,
-      maxLife: 40 + Math.random() * 30,
-      color,
-      size: 2 + Math.random() * 2.5,
-    });
-  }
-  fireworks.push({ particles: fwParticles, exploded: true });
-}
-
-function updateFireworks() {
-  for (let f = fireworks.length - 1; f >= 0; f--) {
-    const fw = fireworks[f];
-    let alive = false;
-    fw.particles.forEach(p => {
-      p.x += p.vx;
-      p.y += p.vy;
-      p.vy += 0.03;
-      p.vx *= 0.98;
-      p.vy *= 0.98;
-      p.life--;
-      if (p.life > 0) alive = true;
-    });
-    if (!alive) fireworks.splice(f, 1);
-  }
-}
-
-function drawFireworks(ctx) {
-  fireworks.forEach(fw => {
-    fw.particles.forEach(p => {
-      if (p.life <= 0) return;
-      const alpha = p.life / p.maxLife;
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = p.color;
-      ctx.shadowColor = p.color;
-      ctx.shadowBlur = 6 * alpha;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
-      ctx.fill();
-    });
-  });
-  ctx.globalAlpha = 1;
-  ctx.shadowBlur = 0;
 }
 
 function updateParticles() {
@@ -80,8 +25,56 @@ function updateParticles() {
     const p = particles[i];
     p.x += p.vx;
     p.y += p.vy;
-    p.vy += 0.2;
+    p.vy += 0.15;
     p.life--;
     if (p.life <= 0) particles.splice(i, 1);
   }
+}
+
+function spawnFirework() {
+  const x = Math.random() * canvas.width;
+  const y = Math.random() * (canvas.height * 0.6);
+  const colors = ['#ff00ff', '#00ffff', '#ffd700', '#ff69b4', '#00ff88', '#ff4500'];
+  const color = colors[Math.floor(Math.random() * colors.length)];
+  const particlesCount = 20 + Math.floor(Math.random() * 15);
+  
+  for (let i = 0; i < particlesCount; i++) {
+    const angle = (Math.PI * 2 * i) / particlesCount;
+    const speed = 2 + Math.random() * 3;
+    fireworks.push({
+      x: x,
+      y: y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: 40 + Math.random() * 20,
+      maxLife: 60,
+      size: 2 + Math.random() * 2,
+      color: color,
+    });
+  }
+}
+
+function updateFireworks() {
+  for (let i = fireworks.length - 1; i >= 0; i--) {
+    const p = fireworks[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.08;
+    p.life--;
+    if (p.life <= 0) fireworks.splice(i, 1);
+  }
+}
+
+function drawFireworks(ctxRef) {
+  fireworks.forEach(p => {
+    ctxRef.globalAlpha = p.life / p.maxLife;
+    ctxRef.fillStyle = p.color;
+    ctxRef.shadowColor = p.color;
+    ctxRef.shadowBlur = 8;
+    ctxRef.beginPath();
+    ctxRef.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctxRef.fill();
+  });
+  ctxRef.shadowBlur = 0;
+  ctxRef.globalAlpha = 1;
 }

@@ -13,9 +13,19 @@ class SpriteLoader {
   load() {
     const promises = [];
     for (const [name, fileInfo] of Object.entries(this.config.files)) {
-      const promise = new Promise((resolve, reject) => {
+      const promise = new Promise((resolve) => {
         const img = new Image();
+        
+        // Timeout de seguridad: si en 5s no carga, seguimos sin bloquear
+        const timeout = setTimeout(() => {
+          console.warn(`Timeout cargando: ${fileInfo.src}`);
+          this.loaded++;
+          this.updateLoadingUI();
+          resolve();
+        }, 5000);
+
         img.onload = () => {
+          clearTimeout(timeout);
           this.images[name] = {
             image: img,
             frames: fileInfo.frames,
@@ -32,7 +42,15 @@ class SpriteLoader {
           this.updateLoadingUI();
           resolve();
         };
-        img.onerror = () => reject(new Error(`No se pudo cargar: ${fileInfo.src}`));
+        
+        img.onerror = () => {
+          clearTimeout(timeout);
+          console.warn(`No se pudo cargar: ${fileInfo.src}`);
+          this.loaded++;
+          this.updateLoadingUI();
+          resolve(); // NO bloqueamos por un sprite faltante
+        };
+        
         img.src = fileInfo.src;
       });
       promises.push(promise);

@@ -40,26 +40,6 @@ const SPRITE_CONFIG = {
       frameWidth: 134, frameHeight: 229,
       scale: 0.25, offsetX: -17, offsetY: -56,
     },
-    // --- NUEVAS ENTRADAS PARA CAZARES ---
-    'cazares-ready': {
-      src: 'assets/casa-ready.png',
-      frames: 16, speed: 3, cols: 4, rows: 4,
-      frameWidth: 447, frameHeight: 664,
-      scale: 0.085, offsetX: -24, offsetY: -58,
-    },
-    'cazares-run': {
-      src: 'assets/casa-run.png', // Cambia o añade el archivo cuando lo tengas listo
-      frames: 16, speed: 3, cols: 4, rows: 4,
-      frameWidth: 101, frameHeight: 131,
-      scale: 0.42, offsetX: -21, offsetY: -52,
-    },
-    'cazares-celebrate': {
-      src: 'assets/casa-celebrate.png', // Cambia o añade el archivo cuando lo tengas listo
-      frames: 16, speed: 3, cols: 4, rows: 4,
-      frameWidth: 134, frameHeight: 229,
-      scale: 0.25, offsetX: -17, offsetY: -56,
-    },
-    // ------------------------------------
     prispas: {
       src: 'assets/prispas.webp',
       frames: 1, speed: 1, cols: 1, rows: 1,
@@ -94,12 +74,11 @@ const LEVEL_WIDTH = 120;
 const LEVEL_HEIGHT = 20;
 
 const TILE_MAP = {
-  0: 1,   // suelo
-  1: 2,   // plataforma
-  2: 3,   // bloque moneda
-  3: 4,   // tubo
-  4: 5,   // bandera / meta
+  0: 1,
+  1: 2,
+  2: 3,
+  3: 4,
+  4: 5,
 };
 
-// Tema visual activo: 'nebula' (nivel 1) o 'factory' (nivel 2)
 let currentLevelTheme = 'nebula';

@@ -359,7 +359,6 @@ function beginGame() {
   score = 0; lives = 3; timeLeft = 300; cameraX = 0;
   prispasCollected = 0; allCoinsBonusGiven = false;
   player.x = 64; player.y = GROUND_Y - player.h;
-  // Resetear checkpoint al iniciar[cite: 1]
   lastPosition = { x: 64, y: GROUND_Y - player.h };
   
   player.vx = 0; player.vy = 0; player.invincible = 0;
@@ -384,8 +383,16 @@ function gameLoop() {
   updatePlayer(); updateAnimations(); updateEnemies(); updateMovingPlatforms(); updateCoins(); updateParticles(); updateCamera(); draw();
 }
 
+// ============================================================
+// INICIALIZACIÓN
+// ============================================================
+
 spriteLoader.onComplete = () => {
   animator = new Animator(spriteLoader);
-  drawMenu(); drawTomyPreview(); drawAranaPreview(); requestAnimationFrame(updateMenuPreview);
+  drawMenu();
+  drawTomyPreview();
+  drawAranaPreview();
+  requestAnimationFrame(updateMenuPreview);
 };
+
 spriteLoader.load();
