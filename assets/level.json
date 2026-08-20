@@ -1,0 +1,30 @@
+{
+  "width": 120,
+  "height": 20,
+  "tileSize": 32,
+  "layers": [
+    {
+      "name": "ground",
+      "tiles": [
+        { "id": 0, "x": 0, "y": 18 }, { "id": 0, "x": 1, "y": 18 },
+        { "id": 0, "x": 2, "y": 18 }, { "id": 0, "x": 3, "y": 18 },
+        { "id": 0, "x": 4, "y": 18 }, { "id": 0, "x": 5, "y": 18 }
+      ]
+    },
+    {
+      "name": "platforms",
+      "tiles": [
+        { "id": 1, "x": 10, "y": 15 }, { "id": 1, "x": 11, "y": 15 }, { "id": 1, "x": 12, "y": 15 },
+        { "id": 1, "x": 28, "y": 14 }, { "id": 1, "x": 29, "y": 14 }, { "id": 1, "x": 30, "y": 14 }, { "id": 1, "x": 31, "y": 14 }
+      ]
+    }
+  ],
+  "tilesets": [
+    {
+      "name": "boka-tileset",
+      "image": "tileset.png",
+      "tileWidth": 32,
+      "tileHeight": 32
+    }
+  ]
+}
