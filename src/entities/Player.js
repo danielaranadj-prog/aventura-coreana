@@ -5,7 +5,7 @@
 import { GRAVITY, JUMP_FORCE, SPEED, RUN_SPEED, FRICTION, TILE } from '../config.js';
 
 export class Player {
-  constructor(x, y) {
+  constructor(x, y, levelHeight) {
     this.x = x;
     this.y = y;
     this.w = 28;
@@ -17,12 +17,13 @@ export class Player {
     this.invincible = 0;
     this.celebrating = false;
     this.celebrateTimer = 0;
-    this.groundY = (20 - 2) * TILE; // LEVEL_HEIGHT - 2
+    // groundY se calcula dinámicamente según la altura del nivel
+    this.groundY = (levelHeight - 2) * TILE;
   }
 
   update(input, level, dt, audioManager, particleSystem) {
     if (this.celebrating) {
-      this.celebrateTimer -= dt * 60; // convertir a frames aprox
+      this.celebrateTimer -= dt * 60;
       if (this.celebrateTimer <= 0) this.celebrating = false;
       return;
     }
@@ -57,7 +58,9 @@ export class Player {
     // Movimiento vertical con colisión
     this.y += this.vy;
     this.onGround = false;
-    this._resolveVerticalCollision(level, audioManager, particleSystem);
+    const points = this._resolveVerticalCollision(level, audioManager, particleSystem);
+    if (points === 'win') return 'win';
+    if (typeof points === 'number') return points;
 
     // Muerte por caída
     const tileBelowLeft = level.getTile(this.x + 4, this.y + this.h + 2);
@@ -65,7 +68,16 @@ export class Player {
     const isOverGap = (tileBelowLeft === 0 && tileBelowRight === 0 && this.y >= this.groundY - 10);
 
     if (this.y > level.height * TILE + 20 || isOverGap) {
-      return 'fell';
+      if (this.invincible <= 0) {
+        return 'fell';
+      } else {
+        // Reposicionar de manera segura
+        this.x = 64;
+        this.y = this.groundY - this.h + 2;
+        this.vy = 0;
+        this.vx = 0;
+        this.onGround = true;
+      }
     }
 
     if (this.invincible > 0) this.invincible -= dt * 60;
@@ -110,7 +122,7 @@ export class Player {
               level.setTile(tx, ty, 0);
               particleSystem.spawn(tx * TILE + 16, ty * TILE + 16, '#ffd700', 10);
               audioManager.play('stomp');
-              return 100; // puntos
+              return 100;
             }
           }
         }

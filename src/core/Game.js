@@ -124,7 +124,7 @@ export class Game {
     this.camera = new Camera(this.canvas.width, levelWidth, TILE);
 
     const groundY = (levelHeight - 2) * TILE;
-    this.player = new Player(64, groundY - 48);
+    this.player = new Player(64, groundY - 48, levelHeight);
 
     // Crear enemigos según nivel
     if (isLevel2) {
@@ -134,7 +134,7 @@ export class Game {
       this.enemies = createEnemies(this.level.map, levelWidth, levelHeight);
     }
 
-    this.coins = Coin.createAll();
+    this.coins = Coin.createForLevel(this.level.map, levelWidth, levelHeight, isLevel2);
     this.particles = new ParticleSystem();
     this.fireworks = new FireworkSystem();
 
@@ -494,8 +494,8 @@ export class Game {
     if (this.lives <= 0) {
       this._gameOver();
     } else {
-      const groundY = (this.level.height - 2) * TILE;
-      this.player.respawn(Math.max(64, this.player.x - 200), fellInGap ? groundY - this.player.h + 2 : 200, fellInGap);
+      const safeGroundY = (this.level.height - 2) * TILE;
+      this.player.respawn(Math.max(64, this.player.x - 200), fellInGap ? safeGroundY - this.player.h + 2 : 200, fellInGap);
     }
   }
 
