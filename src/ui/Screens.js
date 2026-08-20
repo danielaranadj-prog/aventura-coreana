@@ -15,7 +15,6 @@ export class Screens {
     this.fireworkSystem = null;
   }
 
-  // --- UTILIDADES ---
   hideAll() {
     ['loading','start-screen','level-loading','gameover-screen','win-screen'].forEach(id => {
       document.getElementById(id)?.classList.add('hidden');
@@ -73,8 +72,21 @@ export class Screens {
     const col = this.menuPreviewFrame % spriteData.cols;
     const row = Math.floor(this.menuPreviewFrame / spriteData.cols);
     ctx.clearRect(0, 0, preview.width, preview.height);
-    ctx.drawImage(spriteData.image, col * spriteData.frameWidth, row * spriteData.frameHeight,
-      spriteData.frameWidth, spriteData.frameHeight, 10, 0, 80, 153);
+
+    // Escalar para llenar el canvas de 180x240
+    const fw = spriteData.frameWidth;
+    const fh = spriteData.frameHeight;
+    const aspect = fw / fh;
+    let h = preview.height * 0.9;
+    let w = h * aspect;
+    if (w > preview.width * 0.9) {
+      w = preview.width * 0.9;
+      h = w / aspect;
+    }
+    const x = (preview.width - w) / 2;
+    const y = (preview.height - h) / 2;
+
+    ctx.drawImage(spriteData.image, col * fw, row * fh, fw, fh, x, y, w, h);
   }
 
   _drawAranaPreview() {
@@ -85,13 +97,28 @@ export class Screens {
     const col = this.aranaPreviewFrame % spriteData.cols;
     const row = Math.floor(this.aranaPreviewFrame / spriteData.cols);
     ctx.clearRect(0, 0, preview.width, preview.height);
-    ctx.drawImage(spriteData.image, col * spriteData.frameWidth, row * spriteData.frameHeight,
-      spriteData.frameWidth, spriteData.frameHeight, 10, 0, 80, 153);
+
+    const fw = spriteData.frameWidth;
+    const fh = spriteData.frameHeight;
+    const aspect = fw / fh;
+    let h = preview.height * 0.9;
+    let w = h * aspect;
+    if (w > preview.width * 0.9) {
+      w = preview.width * 0.9;
+      h = w / aspect;
+    }
+    const x = (preview.width - w) / 2;
+    const y = (preview.height - h) / 2;
+
+    ctx.drawImage(spriteData.image, col * fw, row * fh, fw, fh, x, y, w, h);
   }
 
-  showLevelLoading() {
+  showLevelLoading(level = 1) {
     this.hideAll();
-    document.getElementById('level-loading').classList.remove('hidden');
+    const el = document.getElementById('level-loading');
+    const title = el?.querySelector('.level-loading-title');
+    if (title) title.textContent = 'LEVEL ' + level;
+    el?.classList.remove('hidden');
     const fill = document.getElementById('level-loading-fill');
     if (fill) fill.style.width = '0%';
   }
@@ -121,7 +148,6 @@ export class Screens {
     this.winPreviewFrame = 0;
     this.winPreviewTimer = 0;
     this._startWinPreview(selectedCharacter);
-    // Fuegos iniciales
     for (let i = 0; i < 3; i++) {
       setTimeout(() => fireworkSystem.spawn(), i * 400);
     }
