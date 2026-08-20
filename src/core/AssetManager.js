@@ -34,7 +34,10 @@ export class AssetManager {
           if (this.onProgress) this.onProgress(this.loaded, this.total);
           resolve();
         };
-        img.onerror = () => reject(new Error(`No se pudo cargar: ${fileInfo.src}`));
+        img.onerror = () => {
+          console.error('[AssetManager] FAILED to load:', fileInfo.src);
+          reject(new Error(`No se pudo cargar: ${fileInfo.src}`));
+        };
         img.src = fileInfo.src;
       });
       promises.push(promise);
@@ -42,10 +45,11 @@ export class AssetManager {
 
     return Promise.all(promises)
       .then(() => {
+        console.log('[AssetManager] All assets loaded:', Object.keys(this.images));
         if (this.onComplete) this.onComplete();
       })
       .catch(err => {
-        console.error('Error en carga:', err);
+        console.error('[AssetManager] Error en carga:', err);
         if (this.onComplete) this.onComplete();
       });
   }

@@ -11,53 +11,60 @@ export const FRICTION = 0.88;
 export const LEVEL_WIDTH = 120;
 export const LEVEL_HEIGHT = 20;
 
-// NOTA: como este archivo está en src/config.js, las rutas deben subir un nivel (../)
-// para llegar a la carpeta assets/ que está al mismo nivel que index.html
+// Resuelve la ruta base de assets usando la ubicación REAL de este módulo
+// import.meta.url = https://tusitio.com/aventura-coreana/src/config.js
+// new URL('../assets/', import.meta.url) = https://tusitio.com/aventura-coreana/assets/
+const ASSETS_BASE = new URL('../assets/', import.meta.url).href;
+
+function asset(path) {
+  return ASSETS_BASE + path;
+}
+
 export const SPRITE_CONFIG = {
   files: {
     run: {
-      src: '../assets/TOMY-run.png',
+      src: asset('TOMY-run.png'),
       frames: 36, speed: 3, cols: 6, rows: 6,
       frameWidth: 464, frameHeight: 660,
       scale: 0.09, offsetX: -28, offsetY: -60,
     },
     celebrate: {
-      src: '../assets/TOMY-celebrate.png',
+      src: asset('TOMY-celebrate.png'),
       frames: 36, speed: 3, cols: 6, rows: 6,
       frameWidth: 408, frameHeight: 717,
       scale: 0.08, offsetX: -22, offsetY: -58,
     },
     ready: {
-      src: '../assets/TOMY-ready.png',
+      src: asset('TOMY-ready.png'),
       frames: 36, speed: 2, cols: 6, rows: 6,
       frameWidth: 372, frameHeight: 709,
       scale: 0.08, offsetX: -22, offsetY: -58,
     },
     'arana-ready': {
-      src: '../assets/arana-ready.png',
+      src: asset('arana-ready.png'),
       frames: 16, speed: 3, cols: 4, rows: 4,
       frameWidth: 447, frameHeight: 664,
       scale: 0.085, offsetX: -24, offsetY: -58,
     },
     'arana-run': {
-      src: '../assets/arana-run.png',
+      src: asset('arana-run.png'),
       frames: 16, speed: 3, cols: 4, rows: 4,
       frameWidth: 101, frameHeight: 131,
       scale: 0.42, offsetX: -21, offsetY: -52,
     },
     'arana-celebrate': {
-      src: '../assets/arana-celebrate.png',
+      src: asset('arana-celebrate.png'),
       frames: 16, speed: 3, cols: 4, rows: 4,
       frameWidth: 134, frameHeight: 229,
       scale: 0.25, offsetX: -17, offsetY: -56,
     },
     prispas: {
-      src: '../assets/prispas.webp',
+      src: asset('prispas.webp'),
       frames: 1, speed: 1, cols: 1, rows: 1,
       frameWidth: 637, frameHeight: 1000,
     },
     item: {
-      src: '../assets/item.png',
+      src: asset('item.png'),
       frames: 1, speed: 1, cols: 1, rows: 1,
       frameWidth: 128, frameHeight: 128,
     },
@@ -65,14 +72,14 @@ export const SPRITE_CONFIG = {
 };
 
 export const AUDIO_CONFIG = {
-  selectPlayer: { src: '../assets/select-player.mp3', loop: true,  volume: 0.6 },
-  gameStart:    { src: '../assets/game-start.mp3',    loop: false, volume: 0.7 },
-  gameAdventure:{ src: '../assets/game-adventure.mp3', loop: true,  volume: 0.5 },
-  death:        { src: '../assets/death.mp3',         loop: false, volume: 0.8 },
-  fail:         { src: '../assets/fail.mp3',          loop: false, volume: 0.8 },
-  jump:         { src: '../assets/jump.mp3',          loop: false, volume: 0.25 },
-  stomp:        { src: '../assets/stomp.mp3',         loop: false, volume: 0.35 },
-  victory:      { src: '../assets/victory.mp3',       loop: false, volume: 0.7 },
+  selectPlayer: { src: asset('select-player.mp3'), loop: true,  volume: 0.6 },
+  gameStart:    { src: asset('game-start.mp3'),    loop: false, volume: 0.7 },
+  gameAdventure:{ src: asset('game-adventure.mp3'), loop: true,  volume: 0.5 },
+  death:        { src: asset('death.mp3'),         loop: false, volume: 0.8 },
+  fail:         { src: asset('fail.mp3'),          loop: false, volume: 0.8 },
+  jump:         { src: asset('jump.mp3'),          loop: false, volume: 0.25 },
+  stomp:        { src: asset('stomp.mp3'),         loop: false, volume: 0.35 },
+  victory:      { src: asset('victory.mp3'),       loop: false, volume: 0.7 },
 };
 
 export const TILE_MAP = {
