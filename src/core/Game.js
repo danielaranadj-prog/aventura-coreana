@@ -10,7 +10,7 @@ import { ParticleSystem } from '../entities/Particle.js';
 import { FireworkSystem } from '../entities/Firework.js';
 import { Level } from '../world/Level.js';
 import { Camera } from '../core/Camera.js';
-import { Animator } from '../core/AssetManager.js';
+import { Animator } from './Animator.js';
 
 export class Game {
   constructor(canvas, ctx, assetManager, audioManager, inputManager, screens, hud) {
